@@ -52,6 +52,7 @@ module.exports = [
                 alert: 'readonly',
                 confirm: 'readonly',
                 FormData: 'readonly',
+                URLSearchParams: 'readonly',
                 console: 'readonly'
             }
         }

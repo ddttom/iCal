@@ -129,6 +129,7 @@ iCal/
 │   ├── workflows/     # CI/CD workflows
 │   └── ISSUE_TEMPLATE/ # Issue templates
 ├── package.json       # Project configuration
+├── .markdownlint.json # Markdown linting configuration
 └── README.md          # This file
 ```
 

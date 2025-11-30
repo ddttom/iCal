@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.querySelector('.modal-header h2');
     const submitBtn = addEventForm.querySelector('button[type="submit"]');
     const eventUidInput = document.getElementById('eventUid');
+    const addEventModal = document.getElementById('addEventModal');
+    const fabAddEvent = document.getElementById('fabAddEvent');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const toastContainer = document.getElementById('toastContainer');
 
     // Modal Logic
     function openModal(event = null) {
