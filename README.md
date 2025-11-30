@@ -112,6 +112,20 @@ node index.js delete <UID> -f calendar.ics
 
 The GUI allows you to view all events, search for specific events, add new ones, and delete existing ones.
 
+### Filtering Events
+
+The Web GUI provides powerful filtering capabilities to help you find specific events:
+
+1. **Text Search**: Use the search bar at the top to filter events by:
+    - **Summary** (e.g., "Meeting", "Lunch")
+    - **Description** (e.g., specific details in the event body)
+    - **Location** (e.g., "Conference Room")
+
+2. **Date Filtering**: Use the date pickers next to the search bar:
+    - **Start Date**: Show events that end after this date.
+    - **End Date**: Show events that start before this date.
+    - **Date Range**: Set both start and end dates to find events within a specific period.
+
 ## Project Structure
 
 ```text

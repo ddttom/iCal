@@ -15,6 +15,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContainer = document.getElementById('toastContainer');
     const rawEventContent = document.getElementById('rawEventContent');
 
+    const listViewBtn = document.getElementById('listViewBtn');
+    const calendarViewBtn = document.getElementById('calendarViewBtn');
+    const listViewSection = document.getElementById('listViewSection');
+    const calendarViewSection = document.getElementById('calendarViewSection');
+    
+    // Calendar Navigation & Views
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const todayBtn = document.getElementById('todayBtn');
+    const currentDateLabel = document.getElementById('currentDateLabel');
+    
+    const monthViewBtn = document.getElementById('monthViewBtn');
+    const weekViewBtn = document.getElementById('weekViewBtn');
+    const dayViewBtn = document.getElementById('dayViewBtn');
+    
+    const monthViewContainer = document.getElementById('monthViewContainer');
+    const timeGridContainer = document.getElementById('timeGridContainer');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const timeGridHeader = document.getElementById('timeGridHeader');
+    const timeGridContent = document.getElementById('timeGridContent');
+    const timeColumn = document.querySelector('.time-column');
+
+    let currentView = 'list'; // 'list', 'month', 'week', 'day'
+    let currentCalendarDate = new Date();
+    let allEvents = []; // Store fetched events for calendar filtering
+
+    const viewRawBtn = document.getElementById('viewRawBtn');
+
     // Modal Logic
     function openModal(event = null) {
         if (event) {
@@ -23,16 +51,22 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'Save Changes';
             eventUidInput.value = event.uid;
             
+            // Show View Raw button
+            viewRawBtn.style.display = 'block';
+            viewRawBtn.onclick = () => {
+                rawEventContent.textContent = event.raw;
+                viewEventModal.classList.add('active');
+            };
+            
             document.getElementById('summary').value = event.summary;
             document.getElementById('description').value = event.description || '';
             document.getElementById('location').value = event.location || '';
             
             // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
             const formatDate = (dateStr) => {
-                const date = new Date(dateStr);
-                return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
-                    .toISOString()
-                    .slice(0, 16);
+                // dateStr is already ISO UTC (e.g. 2025-11-30T15:00:00.000Z)
+                // We want 2025-11-30T15:00
+                return dateStr.slice(0, 16);
             };
             
             document.getElementById('startDate').value = formatDate(event.startDate);
@@ -45,6 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'Create Event';
             addEventForm.reset();
             eventUidInput.value = '';
+            
+            // Hide View Raw button
+            viewRawBtn.style.display = 'none';
         }
         
         addEventModal.classList.add('active');
@@ -70,6 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
     addEventModal.addEventListener('click', (e) => {
         if (e.target === addEventModal) {
             closeModal();
+        }
+    });
+
+    viewEventModal.addEventListener('click', (e) => {
+        if (e.target === viewEventModal) {
+            closeViewModal();
         }
     });
 
@@ -126,15 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(url);
-            const events = await response.json();
-            renderEvents(events);
+            allEvents = await response.json();
+            
+            if (currentView === 'list') {
+                renderEvents(allEvents);
+            } else {
+                renderCalendar();
+            }
         } catch (error) {
             console.error('Error fetching events:', error);
             showToast('Failed to load events', 'error');
         }
     }
 
-    // Render events to DOM
+    // Render events to DOM (List View)
     function renderEvents(events) {
         eventList.innerHTML = '';
         if (events.length === 0) {
@@ -152,12 +200,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const startDate = new Date(event.startDate).toLocaleString(undefined, {
                 dateStyle: 'medium',
-                timeStyle: 'short'
+                timeStyle: 'short',
+                hour12: false,
+                timeZone: 'UTC'
             });
             
             const endDate = event.endDate ? new Date(event.endDate).toLocaleString(undefined, {
                 dateStyle: 'medium',
-                timeStyle: 'short'
+                timeStyle: 'short',
+                hour12: false,
+                timeZone: 'UTC'
             }) : '';
             
             const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
@@ -211,6 +263,316 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Render Calendar View
+    function renderCalendar() {
+        if (currentView === 'month') {
+            renderMonthView();
+        } else if (currentView === 'week') {
+            renderWeekView();
+        } else if (currentView === 'day') {
+            renderDayView();
+        }
+    }
+
+    function renderMonthView() {
+        monthViewContainer.style.display = 'block';
+        timeGridContainer.style.display = 'none';
+        
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth();
+        
+        const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+        currentDateLabel.textContent = `${monthName} ${year}`;
+        
+        calendarGrid.innerHTML = '';
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDayOfWeek = firstDay.getDay();
+        
+        for (let i = 0; i < startDayOfWeek; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'calendar-day empty';
+            calendarGrid.appendChild(emptyCell);
+        }
+        
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const date = new Date(year, month, day);
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            
+            if (isToday(date)) {
+                cell.classList.add('today');
+            }
+            
+            const dayNum = document.createElement('div');
+            dayNum.className = 'day-number';
+            dayNum.textContent = day;
+            cell.appendChild(dayNum);
+            
+            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate), date));
+            
+            dayEvents.forEach(event => {
+                const eventEl = createEventElement(event);
+                cell.appendChild(eventEl);
+            });
+            
+            cell.addEventListener('click', () => {
+                openModal(null);
+                document.getElementById('startDate').value = toLocalISOString(date);
+            });
+            
+            calendarGrid.appendChild(cell);
+        }
+    }
+
+    function renderWeekView() {
+        monthViewContainer.style.display = 'none';
+        timeGridContainer.style.display = 'block';
+        
+        // Calculate start of week (Sunday)
+        const startOfWeek = new Date(currentCalendarDate);
+        startOfWeek.setDate(currentCalendarDate.getDate() - currentCalendarDate.getDay());
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        
+        const startMonth = startOfWeek.toLocaleString('default', { month: 'short' });
+        const endMonth = endOfWeek.toLocaleString('default', { month: 'short' });
+        const year = startOfWeek.getFullYear();
+        
+        currentDateLabel.textContent = `${startMonth} ${startOfWeek.getDate()} - ${endMonth} ${endOfWeek.getDate()}, ${year}`;
+        
+        renderTimeGrid(startOfWeek, 7);
+    }
+
+    function renderDayView() {
+        monthViewContainer.style.display = 'none';
+        timeGridContainer.style.display = 'block';
+        
+        const dateOptions = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+        currentDateLabel.textContent = currentCalendarDate.toLocaleDateString(undefined, dateOptions);
+        
+        renderTimeGrid(currentCalendarDate, 1);
+    }
+
+    function renderTimeGrid(startDate, days) {
+        // Render Header
+        timeGridHeader.innerHTML = '';
+        timeGridContent.innerHTML = '';
+        
+        // Render Time Column (Labels)
+        timeColumn.innerHTML = '';
+        for (let i = 0; i < 24; i++) {
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'time-label';
+            // 24-hour format
+            const hour = i.toString().padStart(2, '0') + ':00';
+            timeLabel.textContent = hour;
+            timeColumn.appendChild(timeLabel);
+        }
+        
+        // Render Days
+        for (let i = 0; i < days; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            // Header Cell
+            const headerCell = document.createElement('div');
+            headerCell.className = 'time-grid-header-cell';
+            if (isToday(date)) headerCell.classList.add('today');
+            
+            const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
+            const dayNum = date.getDate();
+            headerCell.textContent = `${dayName} ${dayNum}`;
+            timeGridHeader.appendChild(headerCell);
+            
+            // Body Column
+            const dayColumn = document.createElement('div');
+            dayColumn.className = 'day-column';
+            
+            // Time Slots (Grid Lines)
+            for (let h = 0; h < 24; h++) {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                dayColumn.appendChild(slot);
+            }
+            
+            // Current Time Indicator (if today)
+            if (isToday(date)) {
+                const now = new Date();
+                const minutes = now.getHours() * 60 + now.getMinutes();
+                const top = (minutes / 1440) * 100; // Percentage
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'current-time-indicator';
+                indicator.style.top = `${top}%`;
+                dayColumn.appendChild(indicator);
+            }
+            
+            // Events
+            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate), date));
+            dayEvents.forEach(event => {
+                const eventStart = new Date(event.startDate);
+                const eventEnd = event.endDate ? new Date(event.endDate) : new Date(eventStart.getTime() + 60 * 60 * 1000); // Default 1h
+                
+                const startMinutes = eventStart.getUTCHours() * 60 + eventStart.getUTCMinutes();
+                const endMinutes = eventEnd.getUTCHours() * 60 + eventEnd.getUTCMinutes();
+                const duration = endMinutes - startMinutes;
+                
+                const top = (startMinutes / 1440) * 100;
+                const height = (duration / 1440) * 100;
+                
+                const eventEl = document.createElement('div');
+                eventEl.className = `time-grid-event ${event.isRecurring ? 'recurring' : ''}`;
+                eventEl.style.top = `${top}%`;
+                eventEl.style.height = `${height}%`;
+                eventEl.textContent = event.summary;
+                eventEl.title = `${event.summary} (${eventStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false, timeZone: 'UTC'})})`;
+                
+                eventEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openModal(event);
+                });
+                
+                dayColumn.appendChild(eventEl);
+            });
+            
+            // Click to add event
+            dayColumn.addEventListener('click', (e) => {
+                if (e.target !== dayColumn && !e.target.classList.contains('time-slot')) return;
+                
+                openModal(null);
+                document.getElementById('startDate').value = toLocalISOString(date);
+            });
+            
+            timeGridContent.appendChild(dayColumn);
+        }
+    }
+
+    // Helper Functions
+    function isToday(date) {
+        const today = new Date();
+        return isSameDay(date, today);
+    }
+
+    function isSameDay(d1, d2) {
+        return d1.getDate() === d2.getDate() &&
+               d1.getMonth() === d2.getMonth() &&
+               d1.getFullYear() === d2.getFullYear();
+    }
+
+    function createEventElement(event) {
+        const eventEl = document.createElement('div');
+        eventEl.className = `calendar-event ${event.isRecurring ? 'recurring' : ''}`;
+        eventEl.textContent = event.summary;
+        eventEl.title = `${event.summary}`;
+        
+        eventEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openModal(event);
+        });
+        
+        return eventEl;
+    }
+    
+    function toLocalISOString(date) {
+         return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+            .toISOString()
+            .slice(0, 16);
+    }
+
+    // View Toggle Logic
+    listViewBtn.addEventListener('click', () => {
+        console.log('List view clicked. Current view:', currentView);
+        if (currentView === 'list') {
+            console.log('Already in list view, ignoring.');
+            return;
+        }
+        currentView = 'list';
+        listViewBtn.classList.add('active');
+        calendarViewBtn.classList.remove('active');
+        listViewSection.style.display = 'block';
+        calendarViewSection.style.display = 'none';
+        renderEvents(allEvents);
+        console.log('Switched to list view');
+    });
+
+    calendarViewBtn.addEventListener('click', () => {
+        console.log('Calendar toggle clicked. Current view:', currentView);
+        if (currentView !== 'list') {
+            console.log('Already in calendar view (or sub-view), ignoring.');
+            return;
+        }
+        currentView = 'month'; // Default to month view
+        calendarViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        calendarViewSection.style.display = 'block';
+        listViewSection.style.display = 'none';
+        
+        // Update sub-view buttons
+        updateViewButtons('month');
+        renderCalendar();
+        console.log('Switched to calendar view (month)');
+    });
+
+    // Sub-View Switcher
+    function updateViewButtons(view) {
+        console.log('Updating view buttons for:', view);
+        monthViewBtn.classList.toggle('active', view === 'month');
+        weekViewBtn.classList.toggle('active', view === 'week');
+        dayViewBtn.classList.toggle('active', view === 'day');
+    }
+
+    monthViewBtn.addEventListener('click', () => {
+        console.log('Month view clicked');
+        currentView = 'month';
+        updateViewButtons('month');
+        renderCalendar();
+    });
+
+    weekViewBtn.addEventListener('click', () => {
+        console.log('Week view clicked');
+        currentView = 'week';
+        updateViewButtons('week');
+        renderCalendar();
+    });
+
+    dayViewBtn.addEventListener('click', () => {
+        console.log('Day view clicked');
+        currentView = 'day';
+        updateViewButtons('day');
+        renderCalendar();
+    });
+
+    // Navigation
+    prevBtn.addEventListener('click', () => {
+        if (currentView === 'month') {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+        } else if (currentView === 'week') {
+            currentCalendarDate.setDate(currentCalendarDate.getDate() - 7);
+        } else if (currentView === 'day') {
+            currentCalendarDate.setDate(currentCalendarDate.getDate() - 1);
+        }
+        renderCalendar();
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentView === 'month') {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+        } else if (currentView === 'week') {
+            currentCalendarDate.setDate(currentCalendarDate.getDate() + 7);
+        } else if (currentView === 'day') {
+            currentCalendarDate.setDate(currentCalendarDate.getDate() + 1);
+        }
+        renderCalendar();
+    });
+
+    todayBtn.addEventListener('click', () => {
+        currentCalendarDate = new Date();
+        renderCalendar();
+    });
+
     // Add/Edit event
     addEventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -221,8 +583,9 @@ document.addEventListener('DOMContentLoaded', () => {
             summary: formData.get('summary'),
             description: formData.get('description'),
             location: formData.get('location'),
-            startDate: formData.get('startDate'),
-            endDate: formData.get('endDate') || null
+            // Treat input as UTC by appending Z (verified by test/time_conversion.test.js)
+            startDate: new Date(formData.get('startDate') + ':00Z').toISOString(),
+            endDate: formData.get('endDate') ? new Date(formData.get('endDate') + ':00Z').toISOString() : null
         };
 
         try {
@@ -246,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 closeModal();
                 showToast(uid ? 'Event updated successfully' : 'Event added successfully');
-                fetchEvents(searchInput.value);
+                fetchEvents(); // Reload events
             } else {
                 showToast(uid ? 'Failed to update event' : 'Failed to add event', 'error');
             }
@@ -266,16 +629,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 showToast('Event deleted successfully');
                 // Animate removal
-                const btn = document.querySelector(`.btn-delete[data-uid="${uid}"]`);
-                if (btn) {
-                    const card = btn.closest('.event-card');
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateX(20px)';
-                    setTimeout(() => {
-                        fetchEvents(searchInput.value);
-                    }, 300);
+                if (currentView === 'list') {
+                    const btn = document.querySelector(`.btn-delete[data-uid="${uid}"]`);
+                    if (btn) {
+                        const card = btn.closest('.event-card');
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            fetchEvents();
+                        }, 300);
+                    } else {
+                        fetchEvents();
+                    }
                 } else {
-                    fetchEvents(searchInput.value);
+                    fetchEvents();
                 }
             } else {
                 showToast('Failed to delete event', 'error');
