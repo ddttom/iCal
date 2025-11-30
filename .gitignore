@@ -24,3 +24,6 @@ coverage/
 
 # Testing
 test-results/
+
+# Working files
+prod/
