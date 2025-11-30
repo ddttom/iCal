@@ -3,3 +3,24 @@ node_modules/
 *.ics
 !calendar.ics
 .env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime
+pids
+*.pid
+
+# Coverage
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Testing
+test-results/

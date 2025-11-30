@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(git -C /Users/tomcranstoun/Documents/GitHub/iCal log --oneline)",
+      "Bash(git -C /Users/tomcranstoun/Documents/GitHub/iCal remote:*)",
+      "Bash(git -C /Users/tomcranstoun/Documents/GitHub/iCal branch:*)",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

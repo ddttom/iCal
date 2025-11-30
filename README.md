@@ -1,5 +1,10 @@
 # iCal Manager
 
+[![CI Status](https://github.com/ddttom/iCal/workflows/CI/badge.svg)](https://github.com/ddttom/iCal/actions)
+[![codecov](https://codecov.io/gh/ddttom/iCal/branch/main/graph/badge.svg)](https://codecov.io/gh/ddttom/iCal)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](package.json)
+
 A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
 
 ## Features
@@ -8,9 +13,45 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
 - **Web GUI**: A modern web interface to manage your calendar events.
 - **iCal Support**: Parses and generates standard iCal format using `ical.js`.
 
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [CLI](#cli)
+  - [Web GUI](#web-gui)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Community](#community)
+- [Security](#security)
+- [License](#license)
+- [Support](#support)
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** v18.0.0 or higher
+- **npm** v9.0.0 or higher
+
+Check your versions:
+
+```bash
+node --version
+npm --version
+```
+
 ## Installation
 
-1. Clone the repository.
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/ddttom/iCal.git
+   cd iCal
+   ```
+
 2. Install dependencies:
 
    ```bash
@@ -64,7 +105,94 @@ The GUI allows you to view all events, search for specific events, add new ones,
 
 ## Project Structure
 
-- `index.js`: CLI entry point.
-- `server.js`: Express server for the Web GUI.
-- `lib/`: Core logic and utilities.
-- `public/`: Frontend assets (HTML, CSS, JS).
+```
+iCal/
+├── index.js           # CLI entry point
+├── server.js          # Express server for Web GUI
+├── lib/               # Core logic
+│   ├── calendar.js    # CalendarManager class
+│   └── utils.js       # Utility functions
+├── public/            # Frontend assets (HTML, CSS, JS)
+├── test/              # Test files
+│   ├── calendar.test.js
+│   ├── server.test.js
+│   ├── utils.test.js
+│   └── fixtures/      # Test fixtures
+├── .github/           # GitHub configuration
+│   ├── workflows/     # CI/CD workflows
+│   └── ISSUE_TEMPLATE/ # Issue templates
+├── package.json       # Project configuration
+└── README.md          # This file
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Linting
+
+```bash
+# Check for linting errors
+npm run lint
+
+# Automatically fix linting errors
+npm run lint:fix
+```
+
+### Scripts
+
+- `npm start` - Start the web server
+- `npm test` - Run test suite
+- `npm run lint` - Check code style
+- `npm run lint:fix` - Fix code style issues
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- Setting up your development environment
+- Our development workflow and branch naming conventions
+- Code style guidelines
+- Testing requirements
+- Pull request process
+
+Before contributing, please read our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Community
+
+- **[GitHub Discussions](https://github.com/ddttom/iCal/discussions)** - Ask questions, share ideas
+- **[GitHub Wiki](https://github.com/ddttom/iCal/wiki)** - Extended documentation
+- **[GitHub Projects](https://github.com/ddttom/iCal/projects)** - Project roadmap
+
+## Security
+
+If you discover a security vulnerability, please follow our [Security Policy](SECURITY.md). Do not open public issues for security concerns.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- **Issues**: [Report bugs or request features](https://github.com/ddttom/iCal/issues)
+- **Discussions**: [Ask questions or discuss ideas](https://github.com/ddttom/iCal/discussions)
+- **Wiki**: [Read extended documentation](https://github.com/ddttom/iCal/wiki)
+
+---
+
+Made with ❤️ by the iCal Manager community

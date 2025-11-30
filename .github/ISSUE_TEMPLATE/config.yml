@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/ddttom/iCal/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📚 Documentation Wiki
+    url: https://github.com/ddttom/iCal/wiki
+    about: Read extended documentation and guides
