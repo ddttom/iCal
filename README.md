@@ -15,7 +15,8 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **Interactive Elements**: Floating Action Button (FAB) for quick event creation, modal forms for adding/editing events, and toast notifications.
   - **Real-time Search & Filtering**: Instant text search and date range filtering.
   - **Event Management**: View details, edit existing events, and delete events directly from the UI.
-  - **Raw Data Inspection**: View the underlying iCal data for any event.
+  - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
+  - **Standardized Time**: All times are displayed in 24-hour format, with internal UTC storage for consistency.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
 - **Advanced Calendar Features**:
   - **Repeating Events**: Support for recurring events (Daily, Weekly, Monthly) via `RRULE`.
@@ -37,6 +38,7 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
 - [Security](#security)
 - [License](#license)
 - [Support](#support)
+- [Known Issues](#known-issues)
 
 ## Prerequisites
 
@@ -216,6 +218,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues**: [Report bugs or request features](https://github.com/ddttom/iCal/issues)
 - **Discussions**: [Ask questions or discuss ideas](https://github.com/ddttom/iCal/discussions)
 - **Wiki**: [Read extended documentation](https://github.com/ddttom/iCal/wiki)
+
+## Known Issues
+
+For a list of currently known issues and troubleshooting steps, please refer to [docs/problem.md](docs/problem.md).
 
 ---
 

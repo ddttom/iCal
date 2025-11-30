@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-30
+
+### Added
+
+- **Time Standardization**: All times are now displayed in 24-hour format across the application.
+- **UTC Storage**: Events are strictly stored in UTC format internally to prevent timezone issues.
+- **Documentation**: Added `docs/problem.md` to document known issues and troubleshooting steps.
+
+### Fixed
+
+- **Crash**: Fixed a critical syntax error in `app.js` that caused the application to crash on event creation.
+- **Time Display**: Fixed an issue where 15:00 events were displayed at 03:00 or with incorrect positioning.
+- **Modal Behavior**: Fixed an issue where clicking outside the modal did not close it.
+
 ## [Unreleased]
 
 ## [1.2.0] - 2025-11-30
