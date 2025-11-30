@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-11-30
+
+### Added
+
+- **Advanced iCal Properties**: Support for Attendees, Organizer, Status, Categories, and Alarms (VALARM).
+- **Date Filtering**: Filter events by start and end date range.
+- **Edit Event**: Functionality to update existing events via API and UI.
+- **View Details**: Interactive event cards to view full details.
+- **UI Overhaul**: Modern glassmorphism design, Floating Action Button (FAB), and toast notifications.
+- **Sample Data**: Script to populate calendar with diverse sample events.
+
 ## [1.0.0] - 2025-11-30
 
 ### Added
+
 - CLI tool for iCal file management (load, list, search, add, delete)
 - Web GUI with Express server for managing calendar events
 - Core CalendarManager class for iCal operations
