@@ -1,0 +1,36 @@
+{
+  "name": "ical",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ical",
+    "calendar",
+    "cli",
+    "gui",
+    "nodejs"
+  ],
+  "author": "ddttom",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ddttom/iCal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ddttom/iCal/issues"
+  },
+  "homepage": "https://github.com/ddttom/iCal#readme",
+  "type": "commonjs",
+  "dependencies": {
+    "body-parser": "^2.2.1",
+    "commander": "^14.0.2",
+    "date-fns": "^4.1.0",
+    "express": "^5.1.0",
+    "ical.js": "^2.2.1",
+    "inquirer": "^13.0.1",
+    "uuid": "^13.0.0"
+  }
+}
