@@ -8,9 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = addEventForm.querySelector('button[type="submit"]');
     const eventUidInput = document.getElementById('eventUid');
     const addEventModal = document.getElementById('addEventModal');
+    const viewEventModal = document.getElementById('viewEventModal');
     const fabAddEvent = document.getElementById('fabAddEvent');
     const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeViewModalBtn = document.getElementById('closeViewModalBtn');
     const toastContainer = document.getElementById('toastContainer');
+    const rawEventContent = document.getElementById('rawEventContent');
 
     // Modal Logic
     function openModal(event = null) {
@@ -54,8 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
         eventUidInput.value = '';
     }
 
+    function closeViewModal() {
+        viewEventModal.classList.remove('active');
+        rawEventContent.textContent = '';
+    }
+
     fabAddEvent.addEventListener('click', () => openModal(null));
     closeModalBtn.addEventListener('click', closeModal);
+    closeViewModalBtn.addEventListener('click', closeViewModal);
     
     // Close modal when clicking outside
     addEventModal.addEventListener('click', (e) => {
@@ -64,10 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    viewEventModal.addEventListener('click', (e) => {
+        if (e.target === viewEventModal) {
+            closeViewModal();
+        }
+    });
+
     // Escape key to close modal
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && addEventModal.classList.contains('active')) {
-            closeModal();
+        if (e.key === 'Escape') {
+            if (addEventModal.classList.contains('active')) closeModal();
+            if (viewEventModal.classList.contains('active')) closeViewModal();
         }
     });
 
@@ -150,12 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="event-info">
                     <h3>${escapeHtml(event.summary)}</h3>
                     <div class="event-meta">
-                        <span>📅 ${dateStr}</span>
+                        <span>${event.isRecurring ? '🔄' : '🗓️'} ${dateStr}</span>
                         ${event.location ? `<span>📍 ${escapeHtml(event.location)}</span>` : ''}
                     </div>
                     ${event.description ? `<p class="event-desc">${escapeHtml(event.description)}</p>` : ''}
                 </div>
                 <div class="event-actions">
+                    <button class="btn-view" aria-label="View raw event">👁️</button>
                     <button class="btn-edit" aria-label="Edit event">Edit</button>
                     <button class="btn-delete" data-uid="${event.uid}" aria-label="Delete event">Delete</button>
                 </div>
@@ -166,6 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
             editBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openModal(event);
+            });
+
+            // Add view listener
+            const viewBtn = card.querySelector('.btn-view');
+            viewBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                rawEventContent.textContent = event.raw;
+                viewEventModal.classList.add('active');
             });
 
             // Add card click listener for details/edit

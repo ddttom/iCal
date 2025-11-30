@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-11-30
+
+### Added
+
+- **Event Icons**: Visual indicators for recurring (🔄) and single (🗓️) events in the list view.
+- **View Raw Data**: New "View" button (👁️) on event cards to inspect the raw iCal data in a modal.
+
 ## [1.1.1] - 2025-11-30
 
 ### Fixed
