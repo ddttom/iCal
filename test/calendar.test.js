@@ -156,7 +156,7 @@ describe('CalendarManager', () => {
 
         it('should find events by location', () => {
             const results = calendar.searchEvents('Office');
-            expect(results.length).toBe(1);
+            expect(results.length).toBe(2);
             expect(results[0].location).toBe('Office');
         });
 
@@ -174,6 +174,33 @@ describe('CalendarManager', () => {
         it('should return multiple matches', () => {
             const results = calendar.searchEvents('Day');
             expect(results.length).toBeGreaterThan(0);
+        });
+
+        it('should filter events by start date', () => {
+            // Fixture has events on 2025-02-01
+            const results = calendar.searchEvents('', '2025-02-01T15:00:00Z');
+            // Should match "Day Review" (16:00) but not "Team Meeting" (10:00) or "Lunch Break" (12:00)
+            // Wait, logic is: Event End > Range Start.
+            // Team Meeting: 10-11. End (11) < Start (15) -> False
+            // Lunch: 12-13. End (13) < Start (15) -> False
+            // Day Review: 16-17. End (17) > Start (15) -> True
+            expect(results.length).toBe(1);
+            expect(results[0].summary).toBe('Day Review');
+        });
+
+        it('should filter events by end date', () => {
+            const results = calendar.searchEvents('', null, '2025-02-01T11:30:00Z');
+            // Team Meeting: 10-11. Start (10) < End (11:30) -> True
+            // Lunch: 12-13. Start (12) > End (11:30) -> False
+            expect(results.length).toBe(1);
+            expect(results[0].summary).toBe('Team Meeting');
+        });
+
+        it('should filter events by date range', () => {
+            const results = calendar.searchEvents('', '2025-02-01T11:30:00Z', '2025-02-01T13:30:00Z');
+            // Lunch: 12-13. Fits.
+            expect(results.length).toBe(1);
+            expect(results[0].summary).toBe('Lunch Break');
         });
     });
 

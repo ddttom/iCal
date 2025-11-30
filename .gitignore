@@ -2,6 +2,8 @@ node_modules/
 .DS_Store
 *.ics
 !calendar.ics
+!test/fixtures/*.ics
+
 .env
 
 # Logs

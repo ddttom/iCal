@@ -10,8 +10,15 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
 ## Features
 
 - **CLI**: Load, list, search, add, update, and delete events from the command line.
-- **Web GUI**: A modern web interface to manage your calendar events.
-- **iCal Support**: Parses and generates standard iCal format using `ical.js`.
+- **Web GUI**: A premium, modern web interface with:
+  - **Dynamic UI**: Glassmorphism design, smooth animations, and responsive layout.
+  - **Interactive Elements**: Floating Action Button (FAB) for quick event creation, modal forms for adding/editing events, and toast notifications.
+  - **Real-time Search & Filtering**: Instant text search and date range filtering.
+  - **Event Management**: View details, edit existing events, and delete events directly from the UI.
+- **Advanced Calendar Features**:
+  - **Repeating Events**: Support for recurring events (Daily, Weekly, Monthly) via `RRULE`.
+  - **Advanced Properties**: Support for Attendees, Organizers, Status, Categories, and Alarms (VALARM).
+  - **iCal Support**: Full parsing and generation of standard iCal format using `ical.js`.
 
 ## Table of Contents
 
@@ -105,7 +112,7 @@ The GUI allows you to view all events, search for specific events, add new ones,
 
 ## Project Structure
 
-```
+```text
 iCal/
 ├── index.js           # CLI entry point
 ├── server.js          # Express server for Web GUI

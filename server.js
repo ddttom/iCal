@@ -33,12 +33,16 @@ app.get('/api/events', (req, res) => {
 
 // Search events
 app.get('/api/events/search', (req, res) => {
-    const query = req.query.q;
-    if (!query) {
-        return res.status(400).json({ error: 'Query parameter "q" is required' });
+    const query = req.query.q || ''; // Allow empty query if dates are provided
+    const startDate = req.query.start;
+    const endDate = req.query.end;
+
+    if (!query && !startDate && !endDate) {
+        return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
     }
+
     calendarManager.load();
-    const events = calendarManager.searchEvents(query);
+    const events = calendarManager.searchEvents(query, startDate, endDate);
     res.json(events);
 });
 
@@ -53,11 +57,34 @@ app.post('/api/events', (req, res) => {
     if (eventData.startDate) eventData.startDate = new Date(eventData.startDate);
     if (eventData.endDate) eventData.endDate = new Date(eventData.endDate);
 
+    // Advanced properties are passed directly in eventData:
+    // organizer, attendees, status, categories, alarm
+
     const uid = calendarManager.addEvent(eventData);
     if (calendarManager.save()) {
         res.status(201).json({ uid, message: 'Event added successfully' });
     } else {
         res.status(500).json({ error: 'Failed to save event' });
+    }
+});
+
+// Update event
+app.put('/api/events/:uid', (req, res) => {
+    const uid = req.params.uid;
+    const updates = req.body;
+    
+    // Ensure dates are Date objects if present
+    if (updates.startDate) updates.startDate = new Date(updates.startDate);
+    if (updates.endDate) updates.endDate = new Date(updates.endDate);
+
+    if (calendarManager.updateEvent(uid, updates)) {
+        if (calendarManager.save()) {
+            res.json({ message: 'Event updated successfully' });
+        } else {
+            res.status(500).json({ error: 'Failed to save changes' });
+        }
+    } else {
+        res.status(404).json({ error: 'Event not found' });
     }
 });
 

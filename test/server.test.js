@@ -51,12 +51,16 @@ describe('Server API Endpoints', () => {
         });
 
         app.get('/api/events/search', (req, res) => {
-            const query = req.query.q;
-            if (!query) {
-                return res.status(400).json({ error: 'Query parameter "q" is required' });
+            const query = req.query.q || '';
+            const startDate = req.query.start;
+            const endDate = req.query.end;
+
+            if (!query && !startDate && !endDate) {
+                return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
             }
+
             calendarManager.load();
-            const events = calendarManager.searchEvents(query);
+            const events = calendarManager.searchEvents(query, startDate, endDate);
             res.json(events);
         });
 
@@ -74,6 +78,24 @@ describe('Server API Endpoints', () => {
                 res.status(201).json({ uid, message: 'Event added successfully' });
             } else {
                 res.status(500).json({ error: 'Failed to save event' });
+            }
+        });
+
+        app.put('/api/events/:uid', (req, res) => {
+            const uid = req.params.uid;
+            const updates = req.body;
+            
+            if (updates.startDate) updates.startDate = new Date(updates.startDate);
+            if (updates.endDate) updates.endDate = new Date(updates.endDate);
+
+            if (calendarManager.updateEvent(uid, updates)) {
+                if (calendarManager.save()) {
+                    res.json({ message: 'Event updated successfully' });
+                } else {
+                    res.status(500).json({ error: 'Failed to save changes' });
+                }
+            } else {
+                res.status(404).json({ error: 'Event not found' });
             }
         });
 
@@ -194,6 +216,24 @@ describe('Server API Endpoints', () => {
 
             expect(response.body.length).toBeGreaterThan(0);
         });
+
+        it('should filter by date range', async () => {
+            // Create event in specific range
+            await request(app)
+                .post('/api/events')
+                .send({
+                    summary: 'Range Test',
+                    startDate: '2025-04-01T10:00:00Z',
+                    endDate: '2025-04-01T11:00:00Z'
+                });
+
+            const response = await request(app)
+                .get('/api/events/search?start=2025-04-01&end=2025-04-02')
+                .expect(200);
+
+            const found = response.body.find(e => e.summary === 'Range Test');
+            expect(found).toBeDefined();
+        });
     });
 
     describe('POST /api/events', () => {
@@ -290,6 +330,50 @@ describe('Server API Endpoints', () => {
                 .expect(200);
 
             expect(finalResponse.body.length).toBe(initialCount + 1);
+        });
+    });
+
+    describe('PUT /api/events/:uid', () => {
+        let eventUid;
+
+        beforeEach(async () => {
+            const response = await request(app)
+                .post('/api/events')
+                .send({
+                    summary: 'Original Event',
+                    startDate: '2025-02-01T10:00:00Z'
+                })
+                .expect(201);
+            eventUid = response.body.uid;
+        });
+
+        it('should update an existing event', async () => {
+            const updates = {
+                summary: 'Updated Event',
+                description: 'Updated description'
+            };
+
+            await request(app)
+                .put(`/api/events/${eventUid}`)
+                .send(updates)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // Verify update
+            const response = await request(app)
+                .get('/api/events')
+                .expect(200);
+
+            const updatedEvent = response.body.find(e => e.uid === eventUid);
+            expect(updatedEvent.summary).toBe('Updated Event');
+            expect(updatedEvent.description).toBe('Updated description');
+        });
+
+        it('should return 404 for non-existent UID', async () => {
+            await request(app)
+                .put('/api/events/non-existent-uid')
+                .send({ summary: 'Updated' })
+                .expect(404);
         });
     });
 
