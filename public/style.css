@@ -474,6 +474,32 @@ textarea {
     color: var(--text-color);
 }
 
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    align-items: center;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-base);
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
 /* Calendar View */
 .calendar-view-section {
     animation: fadeIn 0.3s ease-out;

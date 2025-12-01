@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fabAddEvent = document.getElementById('fabAddEvent');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const closeViewModalBtn = document.getElementById('closeViewModalBtn');
+    const deleteEventBtn = document.getElementById('deleteEventBtn');
+    const cancelEventBtn = document.getElementById('cancelEventBtn');
     const toastContainer = document.getElementById('toastContainer');
     const rawEventContent = document.getElementById('rawEventContent');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -122,12 +124,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.endDate) {
                 document.getElementById('endDate').value = formatDate(event.endDate.dateTime);
             }
+            deleteEventBtn.style.display = 'flex';
+            deleteEventBtn.onclick = async () => {
+                if (confirm('Are you sure you want to delete this event?')) {
+                    await deleteEvent(event.uid);
+                    closeModal();
+                }
+            };
         } else {
             modalTitle.textContent = 'Add Event';
             submitBtn.textContent = 'Create Event';
             addEventForm.reset();
             eventUidInput.value = '';
             viewRawBtn.style.display = 'none';
+            deleteEventBtn.style.display = 'none';
         }
         addEventModal.classList.add('active');
         document.getElementById('summary').focus();
@@ -147,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fabAddEvent.addEventListener('click', () => openModal(null));
     headerAddEventBtn.addEventListener('click', () => openModal(null));
     closeModalBtn.addEventListener('click', closeModal);
+    cancelEventBtn.addEventListener('click', closeModal);
     closeViewModalBtn.addEventListener('click', closeViewModal);
     addEventModal.addEventListener('click', (e) => { if (e.target === addEventModal) closeModal(); });
     viewEventModal.addEventListener('click', (e) => { if (e.target === viewEventModal) closeViewModal(); });
@@ -289,11 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
             headerBackgroundColor: "#4f46e5",
             weekdayType: "long-upper",
             monthDisplayType: "long",
-            onEventClick: (event) => {
-                // event is the internal event object. We hope it preserves our 'id' property.
-                const originalEvent = allEvents.find(e => e.uid === event.id);
-                if (originalEvent) {
-                    openModal(originalEvent);
+            events: {
+                onEventClick: (event) => {
+                    // event is the internal event object. We hope it preserves our 'id' property.
+                    const originalEvent = allEvents.find(e => e.uid === event.id);
+                    if (originalEvent) {
+                        openModal(originalEvent);
+                    }
                 }
             }
         };

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Interactive Calendar Library**: Integrated `jcalendar.js` to replace the manual calendar implementation, providing a more robust and feature-rich calendar view.
 - **Settings Panel**: Added a settings panel to toggle themes (Light/Dark) and time formats (12h/24h).
+- **Edit Event Actions**: Added "Cancel" and "Delete" buttons to the Edit Event modal for better user control.
 
 ### Changed
 

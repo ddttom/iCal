@@ -99,7 +99,18 @@
                         <input type="datetime-local" id="endDate" name="endDate">
                     </div>
                 </div>
-                <button type="submit" class="btn-primary">Create Event</button>
+                <div class="modal-actions">
+                    <button type="button" id="deleteEventBtn" class="btn-danger" style="display: none;">
+                        🗑️ Delete
+                    </button>
+                    <div style="flex: 1;"></div> <!-- Spacer -->
+                    <button type="button" id="cancelEventBtn" class="btn-secondary">
+                        ❌ Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        💾 Save
+                    </button>
+                </div>
             </form>
         </div>
     </div>

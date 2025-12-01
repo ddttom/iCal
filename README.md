@@ -18,7 +18,7 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **Dark Mode**: Built-in dark theme support with a toggle switch for comfortable viewing in low-light environments.
   - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and toast notifications.
   - **Real-time Search & Filtering**: Instant text search and date range filtering.
-  - **Event Management**: View details, edit existing events, and delete events directly from the UI.
+  - **Event Management**: View details, edit existing events (with Cancel/Delete actions), and delete events directly from the UI.
   - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
   - **Standardized Time**: All times are displayed in 24-hour format. Supports both absolute (UTC) and floating (local) times for accurate scheduling.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
