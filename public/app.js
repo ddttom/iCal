@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeGridContent = document.getElementById('timeGridContent');
     const timeColumn = document.querySelector('.time-column');
 
-    let currentView = 'month'; // Default to 'month'
+    let currentView = localStorage.getItem('currentView') || 'month'; // Default to 'month'
     let currentCalendarDate = new Date();
     let allEvents = []; // Store fetched events for calendar filtering
 
@@ -151,14 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
             const formatDate = (dateStr) => {
-                // dateStr is already ISO UTC (e.g. 2025-11-30T15:00:00.000Z)
-                // We want 2025-11-30T15:00
+                // dateStr is now the structured object's dateTime string
+                // e.g. 2025-11-30T15:00:00 or 2025-11-30T15:00:00Z
+                // We want 2025-11-30T15:00 for the input
                 return dateStr.slice(0, 16);
             };
             
-            document.getElementById('startDate').value = formatDate(event.startDate);
+            document.getElementById('startDate').value = formatDate(event.startDate.dateTime);
             if (event.endDate) {
-                document.getElementById('endDate').value = formatDate(event.endDate);
+                document.getElementById('endDate').value = formatDate(event.endDate.dateTime);
             }
         } else {
             // Add Mode
@@ -283,18 +284,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'event-card';
             
-            const startDate = new Date(event.startDate).toLocaleString(undefined, {
+            // Helper to parse structured date
+            const parseDate = (dateObj) => {
+                if (!dateObj) return null;
+                // dateObj is { dateTime: string, timezone: string }
+                // If floating, treat as local. If UTC, treat as UTC.
+                // Actually, new Date(isoString) treats no-Z as local and Z as UTC, which is exactly what we want for display!
+                return new Date(dateObj.dateTime);
+            };
+
+            const startDateObj = parseDate(event.startDate);
+            const endDateObj = parseDate(event.endDate);
+
+            const startDate = startDateObj.toLocaleString(undefined, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
-                hour12: timeFormat === '12h',
-                timeZone: 'UTC'
+                hour12: timeFormat === '12h'
             });
             
-            const endDate = event.endDate ? new Date(event.endDate).toLocaleString(undefined, {
+            const endDate = endDateObj ? endDateObj.toLocaleString(undefined, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
-                hour12: timeFormat === '12h',
-                timeZone: 'UTC'
+                hour12: timeFormat === '12h'
             }) : '';
             
             const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
@@ -395,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dayNum.textContent = day;
             cell.appendChild(dayNum);
             
-            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate), date));
+            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate.dateTime), date));
             
             dayEvents.forEach(event => {
                 const eventEl = createEventElement(event);
@@ -504,13 +515,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Events
-            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate), date));
+            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate.dateTime), date));
             dayEvents.forEach(event => {
-                const eventStart = new Date(event.startDate);
-                const eventEnd = event.endDate ? new Date(event.endDate) : new Date(eventStart.getTime() + 60 * 60 * 1000); // Default 1h
+                const eventStart = new Date(event.startDate.dateTime);
+                const eventEnd = event.endDate ? new Date(event.endDate.dateTime) : new Date(eventStart.getTime() + 60 * 60 * 1000); // Default 1h
                 
-                const startMinutes = eventStart.getUTCHours() * 60 + eventStart.getUTCMinutes();
-                const endMinutes = eventEnd.getUTCHours() * 60 + eventEnd.getUTCMinutes();
+                const startMinutes = eventStart.getHours() * 60 + eventStart.getMinutes();
+                const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes();
                 const duration = endMinutes - startMinutes;
                 
                 const top = (startMinutes / 1440) * 100;
@@ -521,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 eventEl.style.top = `${top}%`;
                 eventEl.style.height = `${height}%`;
                 eventEl.textContent = event.summary;
-                eventEl.title = `${event.summary} (${eventStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: timeFormat === '12h', timeZone: 'UTC'})})`;
+                eventEl.title = `${event.summary} (${eventStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: timeFormat === '12h'})})`;
                 
                 eventEl.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -583,6 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         currentView = 'list';
+        localStorage.setItem('currentView', 'list');
         listViewBtn.classList.add('active');
         calendarViewBtn.classList.remove('active');
         listViewSection.style.display = 'block';
@@ -599,6 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         currentView = 'month'; // Default to month view
+        localStorage.setItem('currentView', 'month');
         calendarViewBtn.classList.add('active');
         listViewBtn.classList.remove('active');
         calendarViewSection.style.display = 'block';
@@ -622,6 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     monthViewBtn.addEventListener('click', () => {
         console.log('Month view clicked');
         currentView = 'month';
+        localStorage.setItem('currentView', 'month');
         updateViewButtons('month');
         renderCalendar();
     });
@@ -629,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     weekViewBtn.addEventListener('click', () => {
         console.log('Week view clicked');
         currentView = 'week';
+        localStorage.setItem('currentView', 'week');
         updateViewButtons('week');
         renderCalendar();
     });
@@ -636,6 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dayViewBtn.addEventListener('click', () => {
         console.log('Day view clicked');
         currentView = 'day';
+        localStorage.setItem('currentView', 'day');
         updateViewButtons('day');
         renderCalendar();
     });
@@ -678,9 +694,14 @@ document.addEventListener('DOMContentLoaded', () => {
             summary: formData.get('summary'),
             description: formData.get('description'),
             location: formData.get('location'),
-            // Treat input as UTC by appending Z (verified by test/time_conversion.test.js)
-            startDate: new Date(formData.get('startDate') + ':00Z').toISOString(),
-            endDate: formData.get('endDate') ? new Date(formData.get('endDate') + ':00Z').toISOString() : null
+            // Send ISO strings. If user wants floating (no timezone support yet in UI), we send no Z.
+            // But wait, the backend expects just the string now for ICAL.Time.fromString.
+            // For now, let's assume local time input from datetime-local is what we want to send.
+            // datetime-local gives 'YYYY-MM-DDTHH:mm'. 
+            // If we append Z, it becomes UTC. If we don't, it's floating.
+            // Let's stick to floating for now as per user request/issue.
+            startDate: formData.get('startDate'), // Send as is (floating)
+            endDate: formData.get('endDate') || null // Send as is (floating)
         };
 
         try {
@@ -771,12 +792,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initial load
-    if (currentView === 'month') {
+    if (currentView === 'list') {
+        listViewBtn.classList.add('active');
+        calendarViewBtn.classList.remove('active');
+        listViewSection.style.display = 'block';
+        calendarViewSection.style.display = 'none';
+    } else {
+        // month, week, or day
         listViewBtn.classList.remove('active');
         calendarViewBtn.classList.add('active');
         listViewSection.style.display = 'none';
         calendarViewSection.style.display = 'block';
-        updateViewButtons('month');
+        updateViewButtons(currentView);
     }
     updateSearchVisibility();
     fetchEvents();

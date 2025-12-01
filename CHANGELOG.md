@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-12-01
+
+### Added
+
+- **View Persistence**: The application now remembers your last selected calendar view (List, Month, Week, or Day) across sessions.
+
+### Fixed
+
+- **Floating Time Support**: Fixed an issue where events without a timezone (like "Team Lunch") were displayed incorrectly due to UTC conversion. They now appear at their literal time (e.g., 12:00 PM) regardless of timezone.
+- **List View Dates**: Resolved an "Invalid Date" error in the List View caused by the new structured time data format.
+
 ## [1.4.0] - 2025-12-01
 
 ### Added
