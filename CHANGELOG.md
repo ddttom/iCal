@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-12-01
+
+### Added
+
+- **Interactive Calendar Library**: Integrated `jcalendar.js` to replace the manual calendar implementation, providing a more robust and feature-rich calendar view.
+- **Settings Panel**: Added a settings panel to toggle themes (Light/Dark) and time formats (12h/24h).
+
+### Changed
+
+- **Calendar UI**: Completely overhauled the calendar view using `jcalendar.js`.
+- **Script Loading**: Optimized script loading order in `index.html` to ensure dependencies are loaded correctly.
+
+### Fixed
+
+- **Event Loading**: Resolved issues with event loading and rendering by fixing API usage and script dependencies.
+
 ## [1.4.1] - 2025-12-01
 
 ### Added
