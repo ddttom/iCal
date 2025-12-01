@@ -116,12 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    viewEventModal.addEventListener('click', (e) => {
-        if (e.target === viewEventModal) {
-            closeViewModal();
-        }
-    });
-
     // Escape key to close modal
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -477,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function toLocalISOString(date) {
-         return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+        return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
             .toISOString()
             .slice(0, 16);
     }

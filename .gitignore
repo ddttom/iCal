@@ -29,3 +29,6 @@ test-results/
 
 # Working files
 prod/
+
+# Symlinks
+AGENTS.md

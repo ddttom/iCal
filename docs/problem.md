@@ -37,3 +37,35 @@ The application is experiencing two main issues:
 1. **Fix Syntax**: Remove the duplicate code block in `app.js`.
 2. **Verify Labels**: Ensure the grid sidebar generation loop explicitly uses 24h formatting.
 3. **Verify Event Title**: Ensure the tooltip/title formatter explicitly sets `hour12: false`.
+
+## Resolution (2025-12-01)
+
+All issues have been successfully resolved:
+
+1. **Syntax Error Fixed**:
+   - The duplicate `const eventData` declaration was already removed from [public/app.js](../public/app.js)
+   - Additional cleanup: Removed duplicate event listener for `viewEventModal` (lines 113-123)
+   - Code now passes ESLint validation
+
+2. **Time Display Verified**:
+   - Grid positioning uses `getUTCHours()` and `getUTCMinutes()` (lines 419-420)
+   - Time labels use 24-hour format `HH:00` (lines 366-373)
+   - Event tooltips use `hour12: false` and `timeZone: 'UTC'` (line 431)
+   - List view formatting uses `hour12: false` and `timeZone: 'UTC'` (lines 201-213)
+   - Form inputs append `:00Z` to force UTC interpretation (lines 587-588)
+
+3. **Test Coverage Enhanced**:
+   - Converted [test/time_conversion.test.js](../test/time_conversion.test.js) to proper Jest format
+   - Added 13 comprehensive test cases covering:
+     - Input conversion (local → UTC)
+     - Display formatting (UTC → 24-hour display)
+     - Grid positioning (UTC → minute offsets)
+     - End-to-end flow verification
+   - All 91 tests now pass
+
+4. **Code Quality**:
+   - ESLint passes with no errors
+   - Indentation issues auto-fixed
+   - Code follows project style guidelines
+
+The application now consistently uses UTC for internal storage and 24-hour format for all displays, preventing timezone-related display issues.
