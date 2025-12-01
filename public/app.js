@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const eventList = document.getElementById('eventList');
     const searchInput = document.getElementById('searchInput');
+    const searchContainer = document.querySelector('.search-container');
     const startDateFilter = document.getElementById('startDateFilter');
     const endDateFilter = document.getElementById('endDateFilter');
     const addEventForm = document.getElementById('addEventForm');
@@ -14,6 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeViewModalBtn = document.getElementById('closeViewModalBtn');
     const toastContainer = document.getElementById('toastContainer');
     const rawEventContent = document.getElementById('rawEventContent');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const headerAddEventBtn = document.getElementById('headerAddEventBtn');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    const timeFmtBtns = document.querySelectorAll('.time-fmt-btn');
 
     const listViewBtn = document.getElementById('listViewBtn');
     const calendarViewBtn = document.getElementById('calendarViewBtn');
@@ -37,11 +44,91 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeGridContent = document.getElementById('timeGridContent');
     const timeColumn = document.querySelector('.time-column');
 
-    let currentView = 'list'; // 'list', 'month', 'week', 'day'
+    let currentView = 'month'; // Default to 'month'
     let currentCalendarDate = new Date();
     let allEvents = []; // Store fetched events for calendar filtering
 
     const viewRawBtn = document.getElementById('viewRawBtn');
+
+    // Theme Logic
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+
+    themeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            setTheme(theme);
+        });
+    });
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        // Update active state of buttons
+        themeBtns.forEach(btn => {
+            if (btn.dataset.theme === theme) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Time Format Logic
+    let timeFormat = localStorage.getItem('timeFormat') || '12h';
+    setTimeFormat(timeFormat);
+
+    timeFmtBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const format = btn.dataset.format;
+            setTimeFormat(format);
+            // Re-render current view
+            if (currentView === 'list') {
+                renderEvents(allEvents);
+            } else {
+                renderCalendar();
+            }
+        });
+    });
+
+    function setTimeFormat(format) {
+        timeFormat = format;
+        localStorage.setItem('timeFormat', format);
+        
+        timeFmtBtns.forEach(btn => {
+            if (btn.dataset.format === format) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Settings Panel Logic
+    function openSettings() {
+        settingsOverlay.classList.add('active');
+    }
+
+    function closeSettings() {
+        settingsOverlay.classList.remove('active');
+    }
+
+    settingsBtn.addEventListener('click', openSettings);
+    closeSettingsBtn.addEventListener('click', closeSettings);
+    
+    settingsOverlay.addEventListener('click', (e) => {
+        if (e.target === settingsOverlay) {
+            closeSettings();
+        }
+    });
+
+    // Escape key to close settings
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (settingsOverlay.classList.contains('active')) closeSettings();
+        }
+    });
 
     // Modal Logic
     function openModal(event = null) {
@@ -100,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     fabAddEvent.addEventListener('click', () => openModal(null));
+    headerAddEventBtn.addEventListener('click', () => openModal(null));
     closeModalBtn.addEventListener('click', closeModal);
     closeViewModalBtn.addEventListener('click', closeViewModal);
     
@@ -181,8 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
         eventList.innerHTML = '';
         if (events.length === 0) {
             eventList.innerHTML = `
-                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                    <p>No events found. Click the + button to add one!</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">📅</div>
+                    <h3>No Events Found</h3>
+                    <p>Your calendar is looking a bit empty. Why not add some events?</p>
+                    <button class="btn-primary" onclick="document.getElementById('headerAddEventBtn').click()">Create Event</button>
                 </div>
             `;
             return;
@@ -195,14 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const startDate = new Date(event.startDate).toLocaleString(undefined, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
-                hour12: false,
+                hour12: timeFormat === '12h',
                 timeZone: 'UTC'
             });
             
             const endDate = event.endDate ? new Date(event.endDate).toLocaleString(undefined, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
-                hour12: false,
+                hour12: timeFormat === '12h',
                 timeZone: 'UTC'
             }) : '';
             
@@ -360,9 +451,17 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 24; i++) {
             const timeLabel = document.createElement('div');
             timeLabel.className = 'time-label';
-            // 24-hour format
-            const hour = i.toString().padStart(2, '0') + ':00';
-            timeLabel.textContent = hour;
+            
+            let timeText;
+            if (timeFormat === '12h') {
+                const ampm = i >= 12 ? 'PM' : 'AM';
+                const hour12 = i % 12 || 12;
+                timeText = `${hour12} ${ampm}`;
+            } else {
+                timeText = i.toString().padStart(2, '0') + ':00';
+            }
+            
+            timeLabel.textContent = timeText;
             timeColumn.appendChild(timeLabel);
         }
         
@@ -422,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 eventEl.style.top = `${top}%`;
                 eventEl.style.height = `${height}%`;
                 eventEl.textContent = event.summary;
-                eventEl.title = `${event.summary} (${eventStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false, timeZone: 'UTC'})})`;
+                eventEl.title = `${event.summary} (${eventStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: timeFormat === '12h', timeZone: 'UTC'})})`;
                 
                 eventEl.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -488,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarViewBtn.classList.remove('active');
         listViewSection.style.display = 'block';
         calendarViewSection.style.display = 'none';
+        updateSearchVisibility();
         renderEvents(allEvents);
         console.log('Switched to list view');
     });
@@ -506,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update sub-view buttons
         updateViewButtons('month');
+        updateSearchVisibility();
         renderCalendar();
         console.log('Switched to calendar view (month)');
     });
@@ -660,7 +761,24 @@ document.addEventListener('DOMContentLoaded', () => {
     startDateFilter.addEventListener('change', handleSearch);
     endDateFilter.addEventListener('change', handleSearch);
 
+    // Search Visibility Logic
+    function updateSearchVisibility() {
+        if (currentView === 'list') {
+            searchContainer.style.display = 'flex';
+        } else {
+            searchContainer.style.display = 'none';
+        }
+    }
+
     // Initial load
+    if (currentView === 'month') {
+        listViewBtn.classList.remove('active');
+        calendarViewBtn.classList.add('active');
+        listViewSection.style.display = 'none';
+        calendarViewSection.style.display = 'block';
+        updateViewButtons('month');
+    }
+    updateSearchVisibility();
     fetchEvents();
 
     function escapeHtml(text) {

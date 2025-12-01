@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-12-01
+
+### Added
+
+- **Dark Mode**: Full dark theme support with a toggle switch in the header.
+- **UI Enhancements**:
+  - **Background Shapes**: Colorful gradient blobs for a modern, depth-filled look.
+  - **Header Actions**: Added "New Event" button and Theme Toggle to the header for better accessibility.
+  - **Empty States**: Friendly "No Events" illustration and call-to-action when the calendar is empty.
+- **Responsive Design**: Improved layout for mobile devices, including optimized header and calendar grid.
+
 ## [1.3.0] - 2025-11-30
 
 ### Added

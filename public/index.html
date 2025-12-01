@@ -12,20 +12,35 @@
 </head>
 
 <body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
     <div class="container">
         <header>
-            <h1>iCal Manager</h1>
+            <div class="header-left">
+                <h1>iCal Manager</h1>
+            </div>
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search events...">
                 <input type="date" id="startDateFilter" aria-label="Start Date Filter">
                 <input type="date" id="endDateFilter" aria-label="End Date Filter">
             </div>
-            <div class="view-toggle">
-                <button id="listViewBtn" class="toggle-btn active" aria-label="List View">
-                    📄 List
+            <div class="header-actions">
+                <div class="view-toggle">
+                    <button id="listViewBtn" class="toggle-btn active" aria-label="List View">
+                        📄 List
+                    </button>
+                    <button id="calendarViewBtn" class="toggle-btn" aria-label="Calendar View">
+                        📅 Calendar
+                    </button>
+                </div>
+                <button id="headerAddEventBtn" class="btn-primary btn-sm">
+                    + New Event
                 </button>
-                <button id="calendarViewBtn" class="toggle-btn" aria-label="Calendar View">
-                    📅 Calendar
+                <button id="settingsBtn" class="btn-icon" aria-label="Settings">
+                    ⚙️
                 </button>
             </div>
         </header>
@@ -141,6 +156,32 @@
             <div class="modal-body">
                 <pre id="rawEventContent"
                     style="background: #f4f4f4; padding: 1rem; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; font-family: monospace;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsOverlay" class="settings-overlay">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button id="closeSettingsBtn" class="close-modal">&times;</button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <h3>Theme</h3>
+                    <div class="theme-switcher">
+                        <button class="theme-btn" data-theme="light">☀️ Light</button>
+                        <button class="theme-btn" data-theme="dark">🌙 Dark</button>
+                    </div>
+                </div>
+                <div class="setting-item" style="margin-top: 1.5rem;">
+                    <h3>Time Format</h3>
+                    <div class="theme-switcher">
+                        <button class="time-fmt-btn" data-format="12h">12h</button>
+                        <button class="time-fmt-btn" data-format="24h">24h</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
