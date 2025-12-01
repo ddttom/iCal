@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Time Standardization**: All times are now displayed in 24-hour format across the application.
+- **Calendar Views**: Added Month, Week, and Day views for better event visualization.
 - **UTC Storage**: Events are strictly stored in UTC format internally to prevent timezone issues.
 - **Documentation**: Added `docs/problem.md` to document known issues and troubleshooting steps.
 

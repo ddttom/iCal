@@ -12,6 +12,7 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
 - **CLI**: Load, list, search, add, update, and delete events from the command line.
 - **Web GUI**: A premium, modern web interface with:
   - **Dynamic UI**: Glassmorphism design, smooth animations, and responsive layout.
+  - **Multiple Views**: Switch between Month, Week, and Day views to visualize your schedule.
   - **Dark Mode**: Built-in dark theme support with a toggle switch for comfortable viewing in low-light environments.
   - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and toast notifications.
   - **Real-time Search & Filtering**: Instant text search and date range filtering.
