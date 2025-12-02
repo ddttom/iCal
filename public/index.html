@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
 <body>
@@ -18,36 +19,45 @@
         <div class="shape shape-2"></div>
         <div class="shape shape-3"></div>
     </div>
-    <div class="container">
-        <header>
+    <header>
+        <div class="header-content">
             <div class="header-left">
                 <h1>iCal Manager</h1>
             </div>
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search events...">
-                <input type="date" id="startDateFilter" aria-label="Start Date Filter">
-                <input type="date" id="endDateFilter" aria-label="End Date Filter">
-            </div>
+
             <div class="header-actions">
                 <div class="view-toggle">
                     <button id="listViewBtn" class="toggle-btn active" aria-label="List View">
-                        📄 List
+                        <i class="ph ph-list-dashes"></i> List
                     </button>
                     <button id="calendarViewBtn" class="toggle-btn" aria-label="Calendar View">
-                        📅 Calendar
+                        <i class="ph ph-calendar"></i> Calendar
                     </button>
                 </div>
-                <button id="headerAddEventBtn" class="btn-primary btn-sm">
-                    + New Event
+                <button id="headerAddEventBtn" class="btn-secondary btn-sm">
+                    <i class="ph ph-plus"></i> New Event
                 </button>
                 <button id="importEventBtn" class="btn-secondary btn-sm">
-                    📥 Import
+                    <i class="ph ph-download-simple"></i> Import
                 </button>
                 <button id="settingsBtn" class="btn-icon" aria-label="Settings">
-                    ⚙️
+                    <i class="ph ph-gear"></i>
                 </button>
             </div>
-        </header>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="toolbar">
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Search events...">
+                </div>
+                <input type="date" id="startDateFilter" aria-label="Start Date Filter">
+                <input type="date" id="endDateFilter" aria-label="End Date Filter">
+            </div>
+        </div>
 
         <main>
             <section id="listViewSection" class="event-list-section">
@@ -63,7 +73,7 @@
 
         <!-- Floating Action Button -->
         <button id="fabAddEvent" class="fab" aria-label="Add Event">
-            +
+            <i class="ph ph-plus"></i>
         </button>
     </div>
 
@@ -73,9 +83,9 @@
             <div class="modal-header">
                 <h2 id="modalTitle">Add Event</h2>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button id="viewRawBtn" class="btn-icon" aria-label="View Raw Data"
-                        style="display: none;">👁️</button>
-                    <span class="close-modal" id="closeModalBtn">&times;</span>
+                    <button id="viewRawBtn" class="btn-icon" aria-label="View Raw Data" style="display: none;"><i
+                            class="ph ph-code"></i></button>
+                    <span class="close-modal" id="closeModalBtn"><i class="ph ph-x"></i></span>
                 </div>
             </div>
             <form id="addEventForm">
@@ -104,14 +114,14 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="deleteEventBtn" class="btn-danger" style="display: none;">
-                        🗑️ Delete
+                        <i class="ph ph-trash"></i> Delete
                     </button>
                     <div style="flex: 1;"></div> <!-- Spacer -->
                     <button type="button" id="cancelEventBtn" class="btn-secondary">
-                        ❌ Cancel
+                        <i class="ph ph-x"></i> Cancel
                     </button>
                     <button type="submit" class="btn-primary">
-                        💾 Save
+                        <i class="ph ph-check"></i> Save
                     </button>
                 </div>
             </form>
@@ -123,7 +133,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Raw Event Data</h2>
-                <button class="close-modal" id="closeViewModalBtn">&times;</button>
+                <button class="close-modal" id="closeViewModalBtn"><i class="ph ph-x"></i></button>
             </div>
             <div class="modal-body">
                 <pre id="rawEventContent"
@@ -137,7 +147,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Import iCal Data</h2>
-                <span class="close-modal" id="closeImportModalBtn">&times;</span>
+                <span class="close-modal" id="closeImportModalBtn"><i class="ph ph-x"></i></span>
             </div>
             <div class="modal-body">
                 <p>Paste your iCal (.ics) content below:</p>
@@ -156,14 +166,14 @@
         <div class="settings-panel">
             <div class="settings-header">
                 <h2>Settings</h2>
-                <button id="closeSettingsBtn" class="close-modal">&times;</button>
+                <button id="closeSettingsBtn" class="close-modal"><i class="ph ph-x"></i></button>
             </div>
             <div class="settings-content">
                 <div class="setting-item">
                     <h3>Theme</h3>
                     <div class="theme-switcher">
-                        <button class="theme-btn" data-theme="light">☀️ Light</button>
-                        <button class="theme-btn" data-theme="dark">🌙 Dark</button>
+                        <button class="theme-btn" data-theme="light"><i class="ph ph-sun"></i> Light</button>
+                        <button class="theme-btn" data-theme="dark"><i class="ph ph-moon"></i> Dark</button>
                     </div>
                 </div>
                 <div class="setting-item" style="margin-top: 1.5rem;">

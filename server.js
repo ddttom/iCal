@@ -54,9 +54,9 @@ app.post('/api/events', (req, res) => {
         return res.status(400).json({ error: 'Summary is required' });
     }
     
-    // Ensure dates are Date objects
-    if (eventData.startDate) eventData.startDate = new Date(eventData.startDate);
-    if (eventData.endDate) eventData.endDate = new Date(eventData.endDate);
+    // Dates are passed as strings to CalendarManager which uses ICAL.Time.fromString
+    // if (eventData.startDate) eventData.startDate = new Date(eventData.startDate);
+    // if (eventData.endDate) eventData.endDate = new Date(eventData.endDate);
 
     // Advanced properties are passed directly in eventData:
     // organizer, attendees, status, categories, alarm
@@ -74,9 +74,9 @@ app.put('/api/events/:uid', (req, res) => {
     const uid = req.params.uid;
     const updates = req.body;
     
-    // Ensure dates are Date objects if present
-    if (updates.startDate) updates.startDate = new Date(updates.startDate);
-    if (updates.endDate) updates.endDate = new Date(updates.endDate);
+    // Dates are passed as strings
+    // if (updates.startDate) updates.startDate = new Date(updates.startDate);
+    // if (updates.endDate) updates.endDate = new Date(updates.endDate);
 
     if (calendarManager.updateEvent(uid, updates)) {
         if (calendarManager.save()) {

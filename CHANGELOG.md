@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2025-12-02
+
+### Added
+
+- **UI Overhaul**: Complete redesign of the header and action buttons for a professional look.
+- **Fixed Header**: Header is now fixed at the top with a glassmorphism effect.
+- **Phosphor Icons**: Replaced all emojis with high-quality Phosphor Icons.
+- **Style Guide**: Added `docs/style-guide.md` to document the design system.
+- **Toolbar**: Dedicated toolbar for search and filters to prevent layout overlaps.
+
 ## [1.6.0] - 2025-12-02
 
 ### Added

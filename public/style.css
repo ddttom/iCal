@@ -48,9 +48,11 @@ body {
 }
 
 .container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    padding: 2rem;
+    padding-top: 140px; /* Increased space for fixed header and toolbar */
     position: relative;
     min-height: 100vh;
 }
@@ -62,19 +64,31 @@ body {
 
 /* Header & Search */
 header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: rgba(248, 250, 252, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] header {
+    background-color: rgba(15, 23, 42, 0.8);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background-color: var(--bg-color);
-    padding-top: 1rem;
 }
 
 .header-actions {
@@ -87,18 +101,35 @@ header {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     width: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .btn-icon {
     background: none;
-    border: none;
+    border: 1px solid transparent; /* Default transparent border */
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0.5rem;
-    border-radius: 50%;
+    border-radius: 0.5rem; /* Boxier look */
     transition: var(--transition-base);
     color: var(--text-color);
-    margin-left: 0.5rem; /* Add spacing */
+    margin-left: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Specific style for boxed settings button in header */
+#settingsBtn {
+    border-color: var(--border-color);
+    background-color: transparent;
+}
+
+#settingsBtn:hover {
+    background-color: rgba(0,0,0,0.05);
+    border-color: var(--text-muted);
 }
 
 .btn-icon:hover {
@@ -121,8 +152,21 @@ h1 {
     margin: 0;
 }
 
-.search-bar input {
-    padding: 0.75rem 1.25rem;
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-wrapper .ph {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+#searchInput {
+    padding: 0.75rem 1.25rem 0.75rem 2.75rem;
     border: 1px solid var(--border-color);
     border-radius: 9999px;
     width: 300px;
@@ -132,10 +176,24 @@ h1 {
     box-shadow: var(--shadow-sm);
 }
 
-.search-bar input:focus {
+.search-wrapper input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Toolbar */
+.toolbar {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: flex-end; /* Align search to right or left as preferred, right is common */
+}
+
+.search-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 /* Event List */
@@ -209,15 +267,36 @@ h1 {
     gap: 0.5rem;
 }
 
+.btn-view {
+    background-color: rgba(100, 116, 139, 0.1); /* Slate 500 equivalent */
+    color: var(--text-muted);
+    border: none;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-base);
+}
+
+.btn-view:hover {
+    background-color: var(--text-muted);
+    color: white;
+}
+
 .btn-edit {
     background-color: rgba(99, 102, 241, 0.1);
     color: var(--primary-color);
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: var(--transition-base);
 }
 
@@ -230,11 +309,13 @@ h1 {
     background-color: rgba(239, 68, 68, 0.1);
     color: var(--danger-color);
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: var(--transition-base);
 }
 
@@ -461,6 +542,9 @@ textarea {
     font-weight: 500;
     color: var(--text-muted);
     transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .toggle-btn.active {
@@ -544,6 +628,7 @@ textarea {
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
+        padding-top: 140px; /* Maintain header space on mobile */
     }
 
     header {

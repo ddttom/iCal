@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showToast(message, type = 'success') {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        const icon = type === 'success' ? '✅' : '❌';
+        const icon = type === 'success' ? '<i class="ph ph-check-circle"></i>' : '<i class="ph ph-warning-circle"></i>';
         toast.innerHTML = `<span>${icon}</span> ${message}`;
         toastContainer.appendChild(toast);
         setTimeout(() => {
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (events.length === 0) {
             eventList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon">📅</div>
+                    <div class="empty-state-icon"><i class="ph ph-calendar-x"></i></div>
                     <h3>No Events Found</h3>
                     <p>Your calendar is looking a bit empty. Why not add some events?</p>
                     <button class="btn-primary" onclick="document.getElementById('headerAddEventBtn').click()">Create Event</button>
@@ -345,15 +345,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="event-info">
                     <h3>${escapeHtml(event.summary)}</h3>
                     <div class="event-meta">
-                        <span>${event.isRecurring ? '🔄' : '🗓️'} ${dateStr}</span>
-                        ${event.location ? `<span>📍 ${escapeHtml(event.location)}</span>` : ''}
+                        <span>${event.isRecurring ? '<i class="ph ph-arrows-clockwise"></i>' : '<i class="ph ph-calendar-blank"></i>'} ${dateStr}</span>
+                        ${event.location ? `<span><i class="ph ph-map-pin"></i> ${escapeHtml(event.location)}</span>` : ''}
                     </div>
                     ${event.description ? `<p class="event-desc">${escapeHtml(event.description)}</p>` : ''}
                 </div>
                 <div class="event-actions">
-                    <button class="btn-view" aria-label="View raw event">👁️</button>
-                    <button class="btn-edit" aria-label="Edit event">Edit</button>
-                    <button class="btn-delete" data-uid="${event.uid}" aria-label="Delete event">Delete</button>
+                    <button class="btn-view" aria-label="View raw event"><i class="ph ph-code"></i></button>
+                    <button class="btn-edit" aria-label="Edit event"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="btn-delete" data-uid="${event.uid}" aria-label="Delete event"><i class="ph ph-trash"></i></button>
                 </div>
             `;
             const editBtn = card.querySelector('.btn-edit');
