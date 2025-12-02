@@ -9,6 +9,7 @@ const port = 3000;
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
+app.use('/lib/ical.js', express.static(path.join(__dirname, 'node_modules/ical.js/dist/ical.min.js')));
 
 // Default calendar file for the GUI
 const defaultCalendarPath = path.resolve('calendar.ics');

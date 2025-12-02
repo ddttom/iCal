@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-12-02
+
+### Added
+
+- **iCal Import**: New feature allowing users to import events by pasting iCal (.ics) text content directly into the application.
+- **Frontend Parsing**: Integrated `ical.js` from npm to handle iCal parsing on the client side.
+
+### Changed
+
+- **Dependency Management**: Updated `server.js` to serve `ical.js` directly from `node_modules`, ensuring consistent versioning.
+
 ## [1.5.0] - 2025-12-01
 
 ### Added

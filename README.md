@@ -22,6 +22,7 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
   - **Standardized Time**: All times are displayed in 24-hour format. Supports both absolute (UTC) and floating (local) times for accurate scheduling.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
+  - **Import Functionality**: Easily import events by pasting iCal content directly into the app.
 - **Advanced Calendar Features**:
   - **Repeating Events**: Support for recurring events (Daily, Weekly, Monthly) via `RRULE`.
   - **Advanced Properties**: Support for Attendees, Organizers, Status, Categories, and Alarms (VALARM).

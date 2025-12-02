@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const listViewSection = document.getElementById('listViewSection');
     const calendarViewSection = document.getElementById('calendarViewSection');
     const viewRawBtn = document.getElementById('viewRawBtn');
+    const importEventBtn = document.getElementById('importEventBtn');
+    const importEventModal = document.getElementById('importEventModal');
+    const closeImportModalBtn = document.getElementById('closeImportModalBtn');
+    const cancelImportBtn = document.getElementById('cancelImportBtn');
+    const processImportBtn = document.getElementById('processImportBtn');
+    const importContent = document.getElementById('importContent');
 
     // State
     let currentView = localStorage.getItem('currentView') || 'month';
@@ -161,10 +167,101 @@ document.addEventListener('DOMContentLoaded', () => {
     closeViewModalBtn.addEventListener('click', closeViewModal);
     addEventModal.addEventListener('click', (e) => { if (e.target === addEventModal) closeModal(); });
     viewEventModal.addEventListener('click', (e) => { if (e.target === viewEventModal) closeViewModal(); });
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (addEventModal.classList.contains('active')) closeModal();
             if (viewEventModal.classList.contains('active')) closeViewModal();
+            if (importEventModal.classList.contains('active')) closeImportModal();
+        }
+    });
+
+    // Import Modal Logic
+    function openImportModal() {
+        importEventModal.classList.add('active');
+        importContent.value = '';
+        importContent.focus();
+    }
+
+    function closeImportModal() {
+        importEventModal.classList.remove('active');
+        importContent.value = '';
+    }
+
+    importEventBtn.addEventListener('click', openImportModal);
+    closeImportModalBtn.addEventListener('click', closeImportModal);
+    cancelImportBtn.addEventListener('click', closeImportModal);
+    importEventModal.addEventListener('click', (e) => { if (e.target === importEventModal) closeImportModal(); });
+
+    processImportBtn.addEventListener('click', async () => {
+        const icalData = importContent.value.trim();
+        if (!icalData) {
+            showToast('Please paste iCal content', 'error');
+            return;
+        }
+
+        try {
+            const jcalData = ICAL.parse(icalData);
+            const comp = new ICAL.Component(jcalData);
+            const vevents = comp.getAllSubcomponents('vevent');
+
+            if (vevents.length === 0) {
+                showToast('No events found in iCal data', 'error');
+                return;
+            }
+
+            let successCount = 0;
+            for (const vevent of vevents) {
+                const event = new ICAL.Event(vevent);
+                
+                const summary = event.summary;
+                const description = event.description;
+                const location = event.location;
+                const startDate = event.startDate ? event.startDate.toJSDate().toISOString() : null;
+                const endDate = event.endDate ? event.endDate.toJSDate().toISOString() : null;
+
+                if (!summary || !startDate) {
+                    console.warn('Skipping invalid event:', event);
+                    continue;
+                }
+
+                const eventData = {
+                    summary,
+                    description,
+                    location,
+                    startDate,
+                    endDate
+                };
+
+                // Send to API
+                try {
+                    const response = await fetch('/api/events', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(eventData)
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        console.error('Failed to save event:', await response.text());
+                    }
+                } catch (err) {
+                    console.error('Error saving imported event:', err);
+                }
+            }
+
+            if (successCount > 0) {
+                showToast(`Successfully imported ${successCount} events`);
+                closeImportModal();
+                fetchEvents();
+            } else {
+                showToast('Failed to import any events', 'error');
+            }
+
+        } catch (error) {
+            console.error('Error parsing iCal data:', error);
+            showToast('Invalid iCal data', 'error');
         }
     });
 

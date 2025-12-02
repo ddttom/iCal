@@ -40,6 +40,9 @@
                 <button id="headerAddEventBtn" class="btn-primary btn-sm">
                     + New Event
                 </button>
+                <button id="importEventBtn" class="btn-secondary btn-sm">
+                    📥 Import
+                </button>
                 <button id="settingsBtn" class="btn-icon" aria-label="Settings">
                     ⚙️
                 </button>
@@ -129,6 +132,25 @@
         </div>
     </div>
 
+    <!-- Import Event Modal -->
+    <div id="importEventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Import iCal Data</h2>
+                <span class="close-modal" id="closeImportModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Paste your iCal (.ics) content below:</p>
+                <textarea id="importContent" rows="10" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem;"
+                    placeholder="BEGIN:VCALENDAR..."></textarea>
+                <div class="modal-actions">
+                    <button type="button" id="cancelImportBtn" class="btn-secondary">Cancel</button>
+                    <button type="button" id="processImportBtn" class="btn-primary">Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Panel -->
     <div id="settingsOverlay" class="settings-overlay">
         <div class="settings-panel">
@@ -159,6 +181,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="lib/calendar.min.js"></script>
+    <script src="/lib/ical.js"></script>
     <script src="app.js"></script>
 </body>
 
