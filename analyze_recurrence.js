@@ -4,9 +4,9 @@ const path = require('path');
 const dbPath = path.resolve('calendar.db');
 const db = new sqlite3.Database(dbPath);
 
-db.all("SELECT rrule FROM events WHERE rrule IS NOT NULL AND rrule != ''", [], (err, rows) => {
+db.all('SELECT rrule FROM events WHERE rrule IS NOT NULL AND rrule != \'\'', [], (err, rows) => {
     if (err) {
-        console.error("Error querying database:", err);
+        console.error('Error querying database:', err);
         process.exit(1);
     }
 
@@ -29,14 +29,14 @@ db.all("SELECT rrule FROM events WHERE rrule IS NOT NULL AND rrule != ''", [], (
         }
     });
 
-    console.log("\n--- Recurrence Frequencies ---");
+    console.log('\n--- Recurrence Frequencies ---');
     Object.entries(frequencies)
         .sort((a, b) => b[1] - a[1])
         .forEach(([freq, count]) => {
             console.log(`${freq}: ${count}`);
         });
 
-    console.log("\n--- Top 10 Recurrence Rules ---");
+    console.log('\n--- Top 10 Recurrence Rules ---');
     Object.entries(patterns)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)

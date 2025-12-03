@@ -113,6 +113,17 @@ npm test -- --clearCache
   - Display formatting uses `toLocaleTimeString('en-GB', {timeZone: 'UTC', hour12: false})`
 - **Known Issue**: See [docs/problem.md](docs/problem.md) for historical timezone debugging details
 
+#### Date Format Conversion (lib/calendar.js)
+
+The `ensureSeconds` helper function in `addEvent()` handles multiple date input formats:
+
+- **datetime-local format** (`YYYY-MM-DDTHH:mm`): Appends `:00` to create valid ISO 8601
+- **ISO 8601 with seconds** (`YYYY-MM-DDTHH:mm:ss`): Passed through unchanged
+- **JavaScript Date objects**: Converted via `.toISOString()`
+- **Non-string types**: Converted to string first
+
+**Important**: `ical.js` requires full ISO 8601 format with seconds. The frontend sends `datetime-local` format (16 characters), which must be converted before parsing with `ICAL.Time.fromString()`. Always store the parsed `ICAL.Time.toString()` result in the database, not the raw input.
+
 ### Advanced iCal Properties
 
 The app supports beyond basic summary/description/location:
@@ -161,10 +172,12 @@ describe('FeatureName', () => {
 
 1. **Forgetting to reload**: Server must call `calendarManager.load()` before each read operation since CLI or other processes might modify the file
 2. **Date conversion**: Always use `ICAL.Time.fromJSDate()` when setting dates, and `.toJSDate()` when reading
-3. **Component vs Event**: Use `ICAL.Event` wrapper for convenient property access, but underlying component needed for advanced operations
-4. **Duplicate variable declarations**: Watch for copy-paste errors in large functions (see docs/problem.md)
-5. **Browser timezone**: Always use `getUTCHours()` for grid positioning, not `getHours()` (local time)
-6. **Server Restart**: The server does not auto-reload on backend code changes. You must manually restart the server (`npm start`) for changes in `server.js` or `lib/` to take effect.
+3. **Date format requirements**: `ical.js` requires ISO 8601 format with seconds (`YYYY-MM-DDTHH:mm:ss`). Frontend `datetime-local` inputs provide format without seconds (`YYYY-MM-DDTHH:mm`) and must be converted using the `ensureSeconds` helper before calling `ICAL.Time.fromString()`
+4. **Database date storage**: Always store the parsed `ICAL.Time.toString()` result in the database, not the raw input string from the frontend
+5. **Component vs Event**: Use `ICAL.Event` wrapper for convenient property access, but underlying component needed for advanced operations
+6. **Duplicate variable declarations**: Watch for copy-paste errors in large functions (see docs/problem.md)
+7. **Browser timezone**: Always use `getUTCHours()` for grid positioning, not `getHours()` (local time)
+8. **Server Restart**: The server does not auto-reload on backend code changes. You must manually restart the server (`npm start`) for changes in `server.js` or `lib/` to take effect.
 
 ## File References
 

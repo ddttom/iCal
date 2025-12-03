@@ -50,6 +50,7 @@ The `CalendarManager` class orchestrates the application logic, bridging the gap
   - Exporting database records to `.ics` format.
   - Calling `Database` methods for event management.
   - Data transformation: Converts database rows into JSON objects for consumers.
+  - Date format conversion: The `ensureSeconds` helper function ensures dates are in proper ISO 8601 format with seconds (`YYYY-MM-DDTHH:mm:ss`) as required by `ical.js`.
 
 ### 3. Command Line Interface (`index.js`)
 
@@ -108,6 +109,33 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
 4. `CalendarManager` queries the `Database`.
 5. `Database` executes `SELECT * FROM events LIMIT 100 OFFSET 0` and `SELECT COUNT(*)`.
 6. Results are returned as JSON `{ events, total, totalDatabaseCount, page, limit }` to the frontend.
+
+## Date Handling
+
+The application uses a standardised approach to date handling:
+
+### Format Requirements
+
+- **`ical.js` Requirement:** All dates must be in ISO 8601 format with seconds (`YYYY-MM-DDTHH:mm:ss`).
+- **Frontend Input:** HTML `datetime-local` inputs provide dates without seconds (`YYYY-MM-DDTHH:mm`).
+- **Conversion:** The `ensureSeconds` helper function in `CalendarManager.addEvent()` handles the conversion:
+  - Detects 16-character datetime-local format
+  - Appends `:00` for seconds
+  - Handles JavaScript Date objects via `.toISOString()`
+  - Validates and passes through existing ISO 8601 strings
+
+### Storage
+
+- **Database:** Stores dates as ISO 8601 strings (output from `ICAL.Time.toString()`)
+- **Backend:** Uses `ICAL.Time` objects for date manipulation
+- **Frontend:** Displays dates using browser locale with 24-hour format
+
+### Example Flow
+
+1. User enters: `2025-12-05T14:30` (datetime-local)
+2. `ensureSeconds()` converts to: `2025-12-05T14:30:00`
+3. `ICAL.Time.fromString()` parses the date
+4. `event.startDate.toString()` produces: `2025-12-05T14:30:00` (stored in database)
 
 ## Dependencies
 

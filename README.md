@@ -266,6 +266,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For a list of currently known issues and troubleshooting steps, please refer to [docs/problem.md](docs/problem.md).
 
+### Recent Fixes
+
+- **v2.1.1 (2025-12-03)**: Fixed "Invalid Date Time" error when creating events. The application now properly handles `datetime-local` input format from the web interface by converting it to ISO 8601 format with seconds as required by `ical.js`.
+
 ---
 
 Made with ❤️ by the iCal Manager community

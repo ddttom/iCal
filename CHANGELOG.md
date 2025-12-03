@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2025-12-03
+
+### Fixed
+
+- **Event Creation**: Fixed "Invalid Date Time" error when creating events via the web interface. The `ensureSeconds` helper function now properly converts `datetime-local` format (`YYYY-MM-DDTHH:mm`) to ISO 8601 format with seconds (`YYYY-MM-DDTHH:mm:ss`) as required by `ical.js`.
+- **Date Storage**: Database now correctly stores parsed `ICAL.Time` objects as ISO strings instead of raw input, ensuring consistent date formatting throughout the application.
+
+### Changed
+
+- **Date Parsing**: Enhanced date parsing logic in `CalendarManager.addEvent()` with better error handling and validation.
+- **Logging**: Added detailed console logging for date conversion debugging.
+
+### Documentation
+
+- **CLAUDE.md**: Added comprehensive documentation about date format conversion and the `ensureSeconds` helper function.
+- **Common Pitfalls**: Updated to include date formatting requirements and database storage best practices.
+
 ## [2.1.0] - 2025-12-03
 
 ### Added

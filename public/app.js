@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // If searching, use search endpoint
         if (query || startDate || endDate) {
-             url += `/search`;
+            url += '/search';
         }
         
         url += `?${params.toString()}`;
@@ -513,11 +513,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const options = {
             manualEditingEnabled: false,
-            theme: "glass",
-            primaryColor: "#4f46e5",
-            headerBackgroundColor: "#4f46e5",
-            weekdayType: "long-upper",
-            monthDisplayType: "long",
+            theme: 'glass',
+            primaryColor: '#4f46e5',
+            headerBackgroundColor: '#4f46e5',
+            weekdayType: 'long-upper',
+            monthDisplayType: 'long',
             events: {
                 onEventClick: (event) => {
                     // event is the internal event object. We hope it preserves our 'id' property.
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Initialize calendar
-        calendarInstance = new calendarJs("calendar", options);
+        calendarInstance = new calendarJs('calendar', options);
         
         // Add events
         allEvents.forEach(event => {
@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 to: end,
                 location: event.location,
                 description: event.description,
-                color: event.isRecurring ? "#db2777" : "#4f46e5"
+                color: event.isRecurring ? '#db2777' : '#4f46e5'
             };
             
             calendarInstance.addEvent(calendarEvent);

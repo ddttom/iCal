@@ -114,7 +114,7 @@ describe('CalendarManager', () => {
         });
         
         it('should handle Date objects in addEvent', async () => {
-             const uid = await calendar.addEvent({
+            const uid = await calendar.addEvent({
                 summary: 'Date Object Test',
                 startDate: new Date('2025-02-01T10:00:00Z')
             });
