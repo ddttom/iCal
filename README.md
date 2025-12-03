@@ -186,8 +186,11 @@ iCal/
 │   └── ISSUE_TEMPLATE/ # Issue templates
 ├── package.json       # Project configuration
 ├── .markdownlint.json # Markdown linting configuration
+├── agents.md          # Agentic workflow context (optional)
 └── README.md          # This file
 ```
+
+For a detailed overview of the application architecture, please refer to [docs/architecture.md](docs/architecture.md).
 
 ## Development
 

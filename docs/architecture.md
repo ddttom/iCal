@@ -11,7 +11,7 @@ The application is built around a shared core library that handles the parsing a
 
 ## Project Structure
 
-```
+```text
 .
 ├── index.js                # Entry point for the CLI
 ├── server.js               # Entry point for the Web Server
@@ -25,7 +25,8 @@ The application is built around a shared core library that handles the parsing a
 │   ├── style.css           # Global styles
 │   └── lib/                # Frontend dependencies
 ├── test/                   # Unit and integration tests
-├── calendar.db             # SQLite database file (created on runtime)
+├── calendar.db             # SQLite database file (ignored by git)
+├── agents.md               # Agentic workflow context (optional)
 └── package.json            # Project configuration and dependencies
 ```
 
