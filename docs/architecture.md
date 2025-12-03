@@ -92,6 +92,14 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
   - Form submissions (Add/Edit/Import).
   - Error handling via console-style overlay (silent success, visible errors).
 - **`style.css`:** Custom CSS variables and styles for a modern, responsive UI.
+  - **CSS Variables:** Theme variables for light/dark mode (colors, shadows)
+  - **Glassmorphism Effects:** Uses both `backdrop-filter` and `-webkit-backdrop-filter` properties for cross-browser compatibility (especially Safari)
+  - **Responsive Design:** Mobile-first approach with media queries
+  - **Browser Compatibility:** Vendor prefixes for Safari support (v9+)
+    - Header blur effect
+    - Modal backdrop blur
+    - Settings panel backdrop
+    - Empty state blur effect
 
 ## Data Flow
 

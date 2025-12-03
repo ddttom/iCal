@@ -70,8 +70,8 @@ header {
     width: 100%;
     z-index: 1000;
     background-color: rgba(248, 250, 252, 0.8);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
 }
@@ -145,8 +145,8 @@ h1 {
     font-weight: 700;
     color: var(--text-color);
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    background-clip: text;
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 
     margin: 0;
@@ -393,6 +393,7 @@ h1 {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     align-items: center;
     justify-content: center;
@@ -716,6 +717,7 @@ textarea {
     padding: 4rem 2rem;
     color: var(--text-muted);
     background: var(--card-bg);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-radius: 1rem;
     border: 1px solid var(--card-border);
@@ -807,6 +809,7 @@ textarea {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     justify-content: flex-end;
 }
@@ -825,8 +828,8 @@ textarea {
     box-sizing: border-box;
     animation: slideInRight 0.3s ease-out;
     border-left: 1px solid var(--card-border);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
 }
 
 @keyframes slideInRight {

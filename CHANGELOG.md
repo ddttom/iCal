@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2025-12-03
+
+### Fixed
+
+- **Safari Compatibility**: Added `-webkit-backdrop-filter` vendor prefixes for Safari support to all glassmorphism UI elements:
+  - Modal overlay backdrop blur effect
+  - Empty state background blur effect
+  - Settings panel backdrop blur effect
+
+### Documentation
+
+- **README.md**: Updated with information about browser compatibility improvements
+- **architecture.md**: Added CSS vendor prefix information to the frontend section
+
 ## [2.2.0] - 2025-12-03
 
 ### Changed

@@ -268,6 +268,7 @@ For a list of currently known issues and troubleshooting steps, please refer to 
 
 ### Recent Changes
 
+- **v2.2.1 (2025-12-03)**: Improved Safari browser compatibility by adding `-webkit-backdrop-filter` prefixes to all glassmorphism UI elements (modal, settings panel, and empty states), ensuring consistent visual effects across all major browsers including Safari and iOS Safari.
 - **v2.2.0 (2025-12-03)**: Replaced toast notifications with a console-style error overlay. Success messages are now silent (logged to browser console only), while errors display in a detailed console overlay with timestamps and error details.
 - **v2.1.1 (2025-12-03)**: Fixed "Invalid Date Time" error when creating events. The application now properly handles `datetime-local` input format from the web interface by converting it to ISO 8601 format with seconds as required by `ical.js`.
 
