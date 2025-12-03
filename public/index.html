@@ -212,27 +212,31 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <script src="lib/calendar.min.js"></script>
-    <script src="/lib/ical.js"></script>
-    <!-- Error Overlay -->
-    <div id="errorOverlay" class="modal-overlay">
-        <div class="modal-content error-modal">
-            <div class="modal-header error-header">
-                <h2>Error</h2>
-                <button class="close-modal" id="closeErrorBtn">&times;</button>
+    <!-- Console Overlay -->
+    <div id="consoleOverlay" class="console-overlay">
+        <div class="console-window">
+            <div class="console-header">
+                <div class="console-title">
+                    <i class="ph ph-terminal"></i>
+                    <span>Application Console</span>
+                </div>
+                <button class="console-close" id="closeConsoleBtn">
+                    <i class="ph ph-x"></i>
+                </button>
             </div>
-            <div class="modal-body">
-                <p id="errorMessage"></p>
+            <div class="console-body">
+                <pre id="consoleOutput" class="console-output"></pre>
             </div>
-            <div class="modal-footer">
-                <button class="btn-primary" id="dismissErrorBtn">Dismiss</button>
+            <div class="console-footer">
+                <button class="btn-primary" id="dismissConsoleBtn">
+                    <i class="ph ph-check"></i> Dismiss
+                </button>
             </div>
         </div>
     </div>
 
+    <script src="lib/calendar.min.js"></script>
+    <script src="/lib/ical.js"></script>
     <script src="app.js"></script>
 </body>
 

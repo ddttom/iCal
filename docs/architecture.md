@@ -88,8 +88,9 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
   - Fetching data from the API (supports pagination).
   - Rendering the Event List and **Infinite Scroll** functionality (using `IntersectionObserver`).
   - Rendering the Calendar View (using `jcalendar.js`).
-  - Managing UI state (Modals including Delete Confirmation, Tabs, Theme, Time Format).
+  - Managing UI state (Modals including Delete Confirmation, Tabs, Theme, Time Format, Console Overlay).
   - Form submissions (Add/Edit/Import).
+  - Error handling via console-style overlay (silent success, visible errors).
 - **`style.css`:** Custom CSS variables and styles for a modern, responsive UI.
 
 ## Data Flow

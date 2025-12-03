@@ -16,7 +16,7 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **Multiple Views**: Seamlessly switch between Month, Week, Day, and List views.
   - **View Persistence**: Automatically remembers your last selected view across sessions.
   - **Dark Mode**: Built-in dark theme support with a toggle switch for comfortable viewing in low-light environments.
-  - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and toast notifications.
+  - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and a console-style error overlay for debugging.
   - **Real-time Search & Filtering**: Instant text search and date range filtering.
   - **Event Management**: View details, edit existing events (with Cancel/Delete actions), and delete events directly from the UI with a custom confirmation modal.
   - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
@@ -266,8 +266,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For a list of currently known issues and troubleshooting steps, please refer to [docs/problem.md](docs/problem.md).
 
-### Recent Fixes
+### Recent Changes
 
+- **v2.2.0 (2025-12-03)**: Replaced toast notifications with a console-style error overlay. Success messages are now silent (logged to browser console only), while errors display in a detailed console overlay with timestamps and error details.
 - **v2.1.1 (2025-12-03)**: Fixed "Invalid Date Time" error when creating events. The application now properly handles `datetime-local` input format from the web interface by converting it to ISO 8601 format with seconds as required by `ical.js`.
 
 ---

@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeViewModalBtn = document.getElementById('closeViewModalBtn');
     const deleteEventBtn = document.getElementById('deleteEventBtn');
     const cancelEventBtn = document.getElementById('cancelEventBtn');
-    const toastContainer = document.getElementById('toastContainer');
     const rawEventContent = document.getElementById('rawEventContent');
     const settingsBtn = document.getElementById('settingsBtn');
     const headerAddEventBtn = document.getElementById('headerAddEventBtn');
@@ -240,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     processImportBtn.addEventListener('click', async () => {
         const icalData = importContent.value.trim();
         if (!icalData) {
-            showToast('Please paste iCal content', 'error');
+            showConsoleMessage('Please paste iCal content', 'error');
             return;
         }
 
@@ -250,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const vevents = comp.getAllSubcomponents('vevent');
 
             if (vevents.length === 0) {
-                showToast('No events found in iCal data', 'error');
+                showConsoleMessage('No events found in iCal data', 'error');
                 return;
             }
 
@@ -296,32 +295,62 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (successCount > 0) {
-                showToast(`Successfully imported ${successCount} events`);
+                showConsoleMessage(`Successfully imported ${successCount} events`, 'success');
                 closeImportModal();
                 fetchEvents();
             } else {
-                showToast('Failed to import any events', 'error');
+                showConsoleMessage('Failed to import any events', 'error');
             }
 
         } catch (error) {
             console.error('Error parsing iCal data:', error);
-            showToast('Invalid iCal data', 'error');
+            showConsoleMessage('Invalid iCal data', 'error', error.message);
         }
     });
 
-    // Toast Notification
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        const icon = type === 'success' ? '<i class="ph ph-check-circle"></i>' : '<i class="ph ph-warning-circle"></i>';
-        toast.innerHTML = `<span>${icon}</span> ${message}`;
-        toastContainer.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+    // Console-style Error/Info Overlay
+    const consoleOverlay = document.getElementById('consoleOverlay');
+    const consoleOutput = document.getElementById('consoleOutput');
+    const closeConsoleBtn = document.getElementById('closeConsoleBtn');
+    const dismissConsoleBtn = document.getElementById('dismissConsoleBtn');
+
+    function showConsoleMessage(message, type = 'info', details = null) {
+        // Silent success - only log to browser console
+        if (type === 'success') {
+            console.log(`✓ SUCCESS: ${message}`);
+            return;
+        }
+
+        // Show overlay for errors and info
+        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        const typeLabel = type === 'error' ? 'ERROR' : 'INFO';
+        const icon = type === 'error' ? '✖' : 'ℹ';
+
+        let output = `[${timestamp}] ${icon} ${typeLabel}: ${message}`;
+
+        if (details) {
+            output += '\n\nDetails:\n' + (typeof details === 'object' ? JSON.stringify(details, null, 2) : details);
+        }
+
+        consoleOutput.textContent = output;
+        consoleOverlay.classList.add('active');
+        consoleOverlay.setAttribute('data-type', type);
     }
+
+    function closeConsole() {
+        consoleOverlay.classList.remove('active');
+    }
+
+    closeConsoleBtn.addEventListener('click', closeConsole);
+    dismissConsoleBtn.addEventListener('click', closeConsole);
+    consoleOverlay.addEventListener('click', (e) => {
+        if (e.target === consoleOverlay) closeConsole();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && consoleOverlay.classList.contains('active')) {
+            closeConsole();
+        }
+    });
 
     // Fetch and display events
     async function fetchEvents(reset = true) {
@@ -379,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching events:', error);
-            showToast('Failed to load events', 'error');
+            showConsoleMessage('Failed to load events', 'error', error.message);
         } finally {
             isLoading = false;
         }
@@ -577,27 +606,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Add/Edit event
-    const errorOverlay = document.getElementById('errorOverlay');
-    const errorMessageEl = document.getElementById('errorMessage');
-    const closeErrorBtn = document.getElementById('closeErrorBtn');
-    const dismissErrorBtn = document.getElementById('dismissErrorBtn');
-
-    function showError(message) {
-        errorMessageEl.textContent = message;
-        errorOverlay.classList.add('active');
-    }
-
-    function closeError() {
-        errorOverlay.classList.remove('active');
-    }
-
-    closeErrorBtn.addEventListener('click', closeError);
-    dismissErrorBtn.addEventListener('click', closeError);
-    errorOverlay.addEventListener('click', (e) => {
-        if (e.target === errorOverlay) closeError();
-    });
-
-    // Add/Edit event
     addEventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(addEventForm);
@@ -629,17 +637,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 closeModal();
-                showToast(uid ? 'Event updated successfully' : 'Event added successfully');
+                showConsoleMessage(uid ? 'Event updated successfully' : 'Event added successfully', 'success');
                 fetchEvents();
             } else {
                 const errorData = await response.json();
                 const errorMessage = errorData.error || (uid ? 'Failed to update event' : 'Failed to add event');
-                showError(errorMessage);
+                showConsoleMessage(errorMessage, 'error', errorData);
                 console.error('Server error:', errorMessage);
             }
         } catch (error) {
             console.error('Error saving event:', error);
-            showError(`Error saving event: ${error.message}`);
+            showConsoleMessage('Error saving event', 'error', error.message);
         }
     });
 
@@ -648,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/api/events/${uid}`, { method: 'DELETE' });
             if (response.ok) {
-                showToast('Event deleted successfully');
+                showConsoleMessage('Event deleted successfully', 'success');
                 if (currentView === 'list') {
                     const btn = document.querySelector(`.btn-delete[data-uid="${uid}"]`);
                     if (btn) {
@@ -663,11 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchEvents();
                 }
             } else {
-                showToast('Failed to delete event', 'error');
+                const errorData = await response.json();
+                showConsoleMessage('Failed to delete event', 'error', errorData);
             }
         } catch (error) {
             console.error('Error deleting event:', error);
-            showToast('Error deleting event', 'error');
+            showConsoleMessage('Error deleting event', 'error', error.message);
         }
     }
 

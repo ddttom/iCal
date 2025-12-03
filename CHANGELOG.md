@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-12-03
+
+### Changed
+
+- **Notification System**: Replaced toast notifications with a console-style error overlay system.
+  - Success messages are now silent and only logged to the browser console (e.g., "Event added successfully").
+  - Error messages display in a prominent console overlay with:
+    - Timestamp in 24-hour format
+    - Error type indicator (ERROR/INFO)
+    - Detailed error information (JSON formatted for objects)
+    - App-controlled dismiss button (no auto-hide)
+  - Console overlay features:
+    - Dark terminal theme (#1e1e1e background)
+    - Monospace font for readability
+    - Colour-coded messages (red for errors, blue for info)
+    - Escape key support for quick dismissal
+    - Click outside to close
+
+### Removed
+
+- **Toast Notifications**: Removed auto-dismissing toast notification system for a cleaner, less intrusive UX.
+
 ## [2.1.1] - 2025-12-03
 
 ### Fixed
