@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let currentView = localStorage.getItem('currentView') || 'month';
     let allEvents = [];
+    let totalDatabaseCount = 0;
     let calendarInstance = null;
     let currentPage = 1;
     const limit = 100; // Load 100 events at a time
@@ -353,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const newEvents = data.events || [];
             const total = data.total || 0;
+            totalDatabaseCount = data.totalDatabaseCount || 0;
             
             if (reset) {
                 allEvents = newEvents;
@@ -411,14 +413,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderEvents(events) {
         eventList.innerHTML = '';
         if (events.length === 0) {
-            eventList.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon"><i class="ph ph-calendar-x"></i></div>
-                    <h3>No Events Found</h3>
-                    <p>Your calendar is looking a bit empty. Why not add some events?</p>
-                    <button class="btn-primary" onclick="document.getElementById('headerAddEventBtn').click()">Create Event</button>
-                </div>
-            `;
+            if (totalDatabaseCount > 0) {
+                // Empty search results
+                eventList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="ph ph-magnifying-glass"></i></div>
+                        <h3>No Items Found</h3>
+                        <p>Database contains <strong>${totalDatabaseCount}</strong> entries.</p>
+                        <button class="btn-secondary" onclick="document.getElementById('clearSearchBtn').click()">Clear Search</button>
+                    </div>
+                `;
+            } else {
+                // Empty database
+                eventList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="ph ph-calendar-x"></i></div>
+                        <h3>No Events Found</h3>
+                        <p>Your calendar is looking a bit empty. Why not add some events?</p>
+                        <button class="btn-primary" onclick="document.getElementById('headerAddEventBtn').click()">Create Event</button>
+                    </div>
+                `;
+            }
             return;
         }
 

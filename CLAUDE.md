@@ -116,6 +116,7 @@ npm test -- --clearCache
 ### Advanced iCal Properties
 
 The app supports beyond basic summary/description/location:
+
 - **Recurring Events**: `rrule` property (ICAL.Recur) for Daily/Weekly/Monthly patterns
 - **Organizer**: With `cn` (common name) parameter for organizer name
 - **Attendees**: Array with email, name, role, status (PARTSTAT)
@@ -163,6 +164,7 @@ describe('FeatureName', () => {
 3. **Component vs Event**: Use `ICAL.Event` wrapper for convenient property access, but underlying component needed for advanced operations
 4. **Duplicate variable declarations**: Watch for copy-paste errors in large functions (see docs/problem.md)
 5. **Browser timezone**: Always use `getUTCHours()` for grid positioning, not `getHours()` (local time)
+6. **Server Restart**: The server does not auto-reload on backend code changes. You must manually restart the server (`npm start`) for changes in `server.js` or `lib/` to take effect.
 
 ## File References
 
@@ -178,6 +180,7 @@ describe('FeatureName', () => {
 From [CONTRIBUTING.md](CONTRIBUTING.md):
 
 ### Branch Naming
+
 - `feature/description` - New features
 - `bugfix/description` - Bug fixes
 - `docs/description` - Documentation
@@ -187,6 +190,7 @@ From [CONTRIBUTING.md](CONTRIBUTING.md):
 ### Commit Format
 
 Follow Conventional Commits:
+
 - `feat(scope): description` - New feature
 - `fix(scope): description` - Bug fix
 - `docs(scope): description` - Documentation

@@ -45,6 +45,7 @@ app.get('/api/events', async (req, res) => {
         res.json({
             events,
             total,
+            totalDatabaseCount: total, // For consistency with search endpoint
             page,
             limit
         });
@@ -67,10 +68,11 @@ app.get('/api/events/search', async (req, res) => {
             return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
         }
 
-        const { events, total } = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
+        const { events, total, totalDatabaseCount } = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
         res.json({
             events,
             total,
+            totalDatabaseCount,
             page,
             limit
         });

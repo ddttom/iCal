@@ -107,7 +107,7 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
 3. `server.js` calls `CalendarManager.listEvents()`.
 4. `CalendarManager` queries the `Database`.
 5. `Database` executes `SELECT * FROM events LIMIT 100 OFFSET 0` and `SELECT COUNT(*)`.
-6. Results are returned as JSON `{ events, total, page, limit }` to the frontend.
+6. Results are returned as JSON `{ events, total, totalDatabaseCount, page, limit }` to the frontend.
 
 ## Dependencies
 

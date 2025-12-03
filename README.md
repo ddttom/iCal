@@ -163,6 +163,7 @@ The Web GUI provides powerful filtering capabilities to help you find specific e
 
 2. **Date Filtering**: Use the date pickers next to the search bar:
     - **Start Date**: Show events that end after this date.
+    - **Empty States**: Smart empty states that distinguish between an empty database and empty search results, providing context-aware messages and actions.
     - **End Date**: Show events that start before this date.
     - **Date Range**: Set both start and end dates to find events within a specific period.
 

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Infinite Scroll**: Replaced "Load More" button with automatic infinite scrolling for a seamless browsing experience.
 - **Event Counts**: Added a display showing the number of events currently loaded vs. the total number of events in the database.
 - **Pagination Metadata**: API now returns total event counts and pagination metadata.
+- **Empty State**: Improved empty state UI to distinguish between an empty database and empty search results, showing the total database count when no items are found.
 
 ## [2.0.1] - 2025-12-03
 
