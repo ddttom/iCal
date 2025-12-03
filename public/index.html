@@ -116,6 +116,10 @@
                         <input type="datetime-local" id="endDate" name="endDate">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="rrule">Recurrence Rule (RRULE)</label>
+                    <input type="text" id="rrule" name="rrule" placeholder="e.g., FREQ=WEEKLY;BYDAY=MO">
+                </div>
                 <div class="modal-actions">
                     <button type="button" id="deleteEventBtn" class="btn-danger" style="display: none;">
                         <i class="ph ph-trash"></i> Delete
@@ -213,6 +217,22 @@
 
     <script src="lib/calendar.min.js"></script>
     <script src="/lib/ical.js"></script>
+    <!-- Error Overlay -->
+    <div id="errorOverlay" class="modal-overlay">
+        <div class="modal-content error-modal">
+            <div class="modal-header error-header">
+                <h2>Error</h2>
+                <button class="close-modal" id="closeErrorBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="dismissErrorBtn">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 

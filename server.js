@@ -50,6 +50,7 @@ app.get('/api/events', async (req, res) => {
             limit
         });
     } catch (err) {
+        console.error('Error in GET /api/events:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -77,12 +78,14 @@ app.get('/api/events/search', async (req, res) => {
             limit
         });
     } catch (err) {
+        console.error('Error in GET /api/events/search:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
 // Add event
 app.post('/api/events', async (req, res) => {
+    console.log('Received POST /api/events request', req.body);
     try {
         const eventData = req.body;
         if (!eventData.summary) {
@@ -92,6 +95,7 @@ app.post('/api/events', async (req, res) => {
         const uid = await calendarManager.addEvent(eventData);
         res.status(201).json({ uid, message: 'Event added successfully' });
     } catch (err) {
+        console.error('Error in POST /api/events:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -109,6 +113,7 @@ app.put('/api/events/:uid', async (req, res) => {
             res.status(404).json({ error: 'Event not found' });
         }
     } catch (err) {
+        console.error('Error in PUT /api/events/:uid:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -124,6 +129,7 @@ app.delete('/api/events/:uid', async (req, res) => {
             res.status(404).json({ error: 'Event not found' });
         }
     } catch (err) {
+        console.error('Error in DELETE /api/events/:uid:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -136,6 +142,7 @@ app.get('/api/export', async (req, res) => {
         res.setHeader('Content-Disposition', 'attachment; filename=calendar.ics');
         res.send(icsData);
     } catch (err) {
+        console.error('Error in GET /api/export:', err);
         res.status(500).json({ error: err.message });
     }
 });

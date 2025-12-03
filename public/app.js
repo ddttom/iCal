@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.endDate) {
                 document.getElementById('endDate').value = formatDate(event.endDate.dateTime);
             }
+            document.getElementById('rrule').value = event.recurrence || '';
             deleteEventBtn.style.display = 'flex';
             deleteEventBtn.onclick = () => {
                 openDeleteModal(event.uid);
@@ -161,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventUidInput.value = '';
             viewRawBtn.style.display = 'none';
             deleteEventBtn.style.display = 'none';
+            document.getElementById('rrule').value = '';
         }
         addEventModal.classList.add('active');
         document.getElementById('summary').focus();
@@ -466,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="event-meta">
                         <span>${event.isRecurring ? '<i class="ph ph-arrows-clockwise"></i>' : '<i class="ph ph-calendar-blank"></i>'} ${dateStr}</span>
                         ${event.location ? `<span><i class="ph ph-map-pin"></i> ${escapeHtml(event.location)}</span>` : ''}
+                        ${event.recurrence ? `<span><i class="ph ph-repeat"></i> ${escapeHtml(event.recurrence)}</span>` : ''}
                     </div>
                     ${event.description ? `<p class="event-desc">${escapeHtml(event.description)}</p>` : ''}
                 </div>
@@ -574,6 +577,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Add/Edit event
+    const errorOverlay = document.getElementById('errorOverlay');
+    const errorMessageEl = document.getElementById('errorMessage');
+    const closeErrorBtn = document.getElementById('closeErrorBtn');
+    const dismissErrorBtn = document.getElementById('dismissErrorBtn');
+
+    function showError(message) {
+        errorMessageEl.textContent = message;
+        errorOverlay.classList.add('active');
+    }
+
+    function closeError() {
+        errorOverlay.classList.remove('active');
+    }
+
+    closeErrorBtn.addEventListener('click', closeError);
+    dismissErrorBtn.addEventListener('click', closeError);
+    errorOverlay.addEventListener('click', (e) => {
+        if (e.target === errorOverlay) closeError();
+    });
+
+    // Add/Edit event
     addEventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(addEventForm);
@@ -583,7 +607,8 @@ document.addEventListener('DOMContentLoaded', () => {
             description: formData.get('description'),
             location: formData.get('location'),
             startDate: formData.get('startDate'),
-            endDate: formData.get('endDate') || null
+            endDate: formData.get('endDate') || null,
+            rrule: formData.get('rrule') || null
         };
 
         try {
@@ -607,11 +632,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(uid ? 'Event updated successfully' : 'Event added successfully');
                 fetchEvents();
             } else {
-                showToast(uid ? 'Failed to update event' : 'Failed to add event', 'error');
+                const errorData = await response.json();
+                const errorMessage = errorData.error || (uid ? 'Failed to update event' : 'Failed to add event');
+                showError(errorMessage);
+                console.error('Server error:', errorMessage);
             }
         } catch (error) {
             console.error('Error saving event:', error);
-            showToast('Error saving event', 'error');
+            showError(`Error saving event: ${error.message}`);
         }
     });
 

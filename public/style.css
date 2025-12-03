@@ -832,3 +832,22 @@ textarea {
     color: #fff;
     background-color: var(--primary-color);
 }
+
+/* Error Overlay */
+.error-modal {
+    border-top: 5px solid #ef4444;
+}
+
+.error-header h2 {
+    color: #ef4444;
+}
+
+.error-header .close-modal:hover {
+    color: #ef4444;
+}
+
+#errorMessage {
+    color: #374151;
+    font-size: 1rem;
+    line-height: 1.5;
+}
