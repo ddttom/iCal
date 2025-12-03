@@ -17,12 +17,13 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **View Persistence**: Automatically remembers your last selected view across sessions.
   - **Dark Mode**: Built-in dark theme support with a toggle switch for comfortable viewing in low-light environments.
   - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and a console-style error overlay for debugging.
-  - **Real-time Search & Filtering**: Instant text search and date range filtering.
+  - **Real-time Search & Filtering**: Instant text search, date range filtering, and advanced filters for "All Day" and "Recurring" events.
+  - **Sortable List**: Toggle event sorting between ascending and descending order.
   - **Event Management**: View details, edit existing events (with Cancel/Delete actions), and delete events directly from the UI with a custom confirmation modal.
   - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
   - **Standardized Time**: All times are displayed in 24-hour format. Supports both absolute (UTC) and floating (local) times for accurate scheduling.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
-  - **Import/Export**: Easily import existing iCal (.ics) data into the database and export it back.
+  - **Import/Export**: Easily import existing iCal (.ics) data into the database and export it back. Exports respect current filters.
   - **Scalability**: Powered by SQLite to handle large datasets (100MB+) with **Pagination** and **Infinite Scroll** support.
   - **Event Counts**: Real-time display of total events and currently showing count.
   - **Modern UI**: A professional, responsive interface featuring a fixed glassmorphism header and Phosphor Icons.
@@ -167,6 +168,14 @@ The Web GUI provides powerful filtering capabilities to help you find specific e
     - **End Date**: Show events that start before this date.
     - **Date Range**: Set both start and end dates to find events within a specific period.
 
+3. **Advanced Filters**:
+    - **All Day**: Show only all-day events.
+    - **Recurring**: Show only recurring events.
+
+4. **Sorting**: Use the sort toggle button to switch between chronological (oldest first) and reverse-chronological (newest first) order.
+
+5. **Filtered Export**: The "Export" button will generate an iCal file containing only the events currently matching your active filters (search, dates, type).
+
 ## Project Structure
 
 ```text
@@ -268,6 +277,8 @@ For a list of currently known issues and troubleshooting steps, please refer to 
 
 ### Recent Changes
 
+- **v2.3.0 (2025-12-03)**: Added advanced filtering (All Day, Recurring), sort toggle, and filtered export. Refactored header for better usability and fixed event deletion bugs.
+- **v2.2.2 (2025-12-03)**: Major stability and data integrity updates. Fixed critical bugs in event updates and export functionality. Enhanced CLI command handling and improved date parsing logic. Added comprehensive test coverage for API endpoints and edge cases.
 - **v2.2.1 (2025-12-03)**: Improved Safari browser compatibility by adding `-webkit-backdrop-filter` prefixes to all glassmorphism UI elements (modal, settings panel, and empty states), ensuring consistent visual effects across all major browsers including Safari and iOS Safari.
 - **v2.2.0 (2025-12-03)**: Replaced toast notifications with a console-style error overlay. Success messages are now silent (logged to browser console only), while errors display in a detailed console overlay with timestamps and error details.
 - **v2.1.1 (2025-12-03)**: Fixed "Invalid Date Time" error when creating events. The application now properly handles `datetime-local` input format from the web interface by converting it to ISO 8601 format with seconds as required by `ical.js`.

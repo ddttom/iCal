@@ -122,5 +122,40 @@ describe('CalendarManager', () => {
             const { events } = await calendar.listEvents();
             expect(events[0].summary).toBe('Date Object Test');
         });
+
+        it('should reject invalid datetime strings in addEvent', async () => {
+            await expect(
+                calendar.addEvent({
+                    summary: 'Invalid datetime test',
+                    // Incomplete datetime string
+                    startDate: '2025-02-01T'
+                })
+            ).rejects.toThrow(/Invalid Date Time:/);
+
+            await expect(
+                calendar.addEvent({
+                    summary: 'Malformed datetime test',
+                    // Clearly malformed string
+                    startDate: 'not-a-datetime'
+                })
+            ).rejects.toThrow(/Invalid Date Time:/);
+        });
+
+        it('should reject missing or empty startDate in addEvent', async () => {
+            // Missing startDate field entirely
+            await expect(
+                calendar.addEvent({
+                    summary: 'Missing startDate test'
+                })
+            ).rejects.toThrow(/Invalid Date Time:/);
+
+            // Present but empty string
+            await expect(
+                calendar.addEvent({
+                    summary: 'Empty startDate test',
+                    startDate: ''
+                })
+            ).rejects.toThrow(/Invalid Date Time:/);
+        });
     });
 });

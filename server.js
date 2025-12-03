@@ -40,8 +40,13 @@ app.get('/api/events', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
+        const sortDir = req.query.sortDir || 'ASC';
+        const filters = {
+            isAllDay: req.query.isAllDay === 'true',
+            isRecurring: req.query.isRecurring === 'true'
+        };
 
-        const { events, total } = await calendarManager.listEvents(limit, offset);
+        const { events, total } = await calendarManager.listEvents(limit, offset, sortDir, filters);
         res.json({
             events,
             total,
@@ -64,12 +69,17 @@ app.get('/api/events/search', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
+        const sortDir = req.query.sortDir || 'ASC';
+        const filters = {
+            isAllDay: req.query.isAllDay === 'true',
+            isRecurring: req.query.isRecurring === 'true'
+        };
 
-        if (!query && !startDate && !endDate) {
-            return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
+        if (!query && !startDate && !endDate && !filters.isAllDay && !filters.isRecurring) {
+            return res.status(400).json({ error: 'At least one filter parameter is required' });
         }
 
-        const { events, total, totalDatabaseCount } = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
+        const { events, total, totalDatabaseCount } = await calendarManager.searchEvents(query, startDate, endDate, limit, offset, sortDir, filters);
         res.json({
             events,
             total,
@@ -85,7 +95,7 @@ app.get('/api/events/search', async (req, res) => {
 
 // Add event
 app.post('/api/events', async (req, res) => {
-    console.log('Received POST /api/events request', req.body);
+
     try {
         const eventData = req.body;
         if (!eventData.summary) {
@@ -137,7 +147,15 @@ app.delete('/api/events/:uid', async (req, res) => {
 // Export Calendar
 app.get('/api/export', async (req, res) => {
     try {
-        const icsData = await calendarManager.exportToICS();
+        const query = req.query.q || '';
+        const startDate = req.query.start;
+        const endDate = req.query.end;
+        const filters = {
+            isAllDay: req.query.isAllDay === 'true',
+            isRecurring: req.query.isRecurring === 'true'
+        };
+
+        const icsData = await calendarManager.exportToICS(query, startDate, endDate, filters);
         res.setHeader('Content-Type', 'text/calendar');
         res.setHeader('Content-Disposition', 'attachment; filename=calendar.ics');
         res.send(icsData);

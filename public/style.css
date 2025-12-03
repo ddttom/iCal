@@ -52,7 +52,7 @@ body {
     margin: 0 auto;
     padding: 2rem;
     padding: 2rem;
-    padding-top: 140px; /* Increased space for fixed header and toolbar */
+    padding-top: 180px; /* Increased space for taller fixed header */
     position: relative;
     min-height: 100vh;
 }
@@ -83,12 +83,25 @@ header {
 .header-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem 2rem;
+    padding: 1rem 2rem 0.5rem 2rem;
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     justify-content: space-between;
     align-items: center;
+}
+
+.header-toolbar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.5rem 2rem 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.header-toolbar .search-container {
+    justify-content: flex-start;
 }
 
 .header-actions {
@@ -215,12 +228,8 @@ h1 {
     border-color: var(--text-color);
 }
 
-/* Toolbar */
-.toolbar {
-    margin-bottom: 2rem;
-    display: flex;
-    justify-content: flex-end; /* Align search to right or left as preferred, right is common */
-}
+/* Toolbar - Removed as it's now in header */
+/* .toolbar { ... } */
 
 .search-container {
     display: flex;
@@ -364,25 +373,37 @@ h1 {
     right: 2rem;
     width: 3.5rem;
     height: 3.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: white;
     border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    box-shadow: var(--shadow-lg);
-    cursor: pointer;
-    transition: var(--transition-base);
-    border: none;
+    font-size: 1.5rem;
+    transition: all 0.2s;
     z-index: 100;
 }
 
 .fab:hover {
-    transform: scale(1.1);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
+.fab-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+    z-index: 1001;
+}
+
+.fab-secondary:hover {
+    background: var(--bg-hover);
+}
 /* Modal */
 .modal {
     display: none;
@@ -916,3 +937,76 @@ textarea {
     background-color: var(--primary-color);
 }
 
+
+/* Utility Classes */
+.flex-center-gap {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.flex-spacer {
+    flex: 1;
+}
+
+.modal-content-sm {
+    max-width: 400px;
+}
+
+.mt-1-5 {
+    margin-top: 1.5rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.mb-1 {
+    margin-bottom: 1rem;
+}
+
+.p-0-5 {
+    padding: 0.5rem;
+}
+
+.calendar-view-section {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.fab-bottom-offset {
+    bottom: 90px;
+}
+
+.hidden {
+    display: none;
+}
+
+.raw-content {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    font-family: monospace;
+}
+
+.filters-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    align-items: center;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    accent-color: var(--primary-color);
+}

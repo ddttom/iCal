@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-12-03
+
+### Added
+
+- **Advanced Filtering**: Added "All Day" and "Recurring" filters to the list view.
+- **Sort Toggle**: Added a button to toggle sort order (ascending/descending).
+- **Filtered Export**: Export functionality now respects the currently active filters (search, date range, type).
+- **Sticky Header**: Moved search bar and filters to the sticky header for better accessibility while scrolling.
+
+### Fixed
+
+- **Event Deletion**: Fixed an issue where deleting events with slashes in the UID failed.
+
+### Changed
+
+- **Data Cleanup**: Removed all untitled events from the database and updated import logic to automatically reject events without a title.
+- **UI Simplification**: Removed the "No Title" filter as it is no longer needed.
+
+## [2.2.2] - 2025-12-03
+
+### Fixed
+
+- **Security**: Mitigated log injection vulnerability by sanitizing `startDate` and `endDate` inputs in logs.
+- **CLI**: Fixed `list` and `search` commands to correctly handle the new object return format from `CalendarManager`.
+- **Data Integrity**: Fixed a critical bug in `updateEvent` where dates were not normalized and `raw_data` was not regenerated, leading to data corruption and export failures.
+- **Export**: Updated `exportToICS` to gracefully handle JSON `raw_data` by falling back to event reconstruction, preventing export crashes.
+- **Date Handling**: Fixed `isAllDay` detection logic and ensured `startDate`/`endDate` are always returned as standard ISO 8601 strings to the frontend.
+
+### Changed
+
+- **Refactoring**: Refactored `addEvent` and `updateEvent` to use a shared `_prepareEventData` method for consistent date normalization and `raw_data` generation.
+- **Logging**: Removed noisy debug `console.log` statements from production code.
+
+### Added
+
+- **Tests**: Added comprehensive tests for:
+  - Invalid date inputs in `addEvent`.
+  - `/api/export` endpoint (end-to-end).
+  - Pagination edge cases and error handling.
+  - Server API contract verification (including `totalDatabaseCount`).
+
 ## [2.2.1] - 2025-12-03
 
 ### Fixed

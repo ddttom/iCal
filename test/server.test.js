@@ -48,8 +48,13 @@ describe('Server API Endpoints', () => {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 50;
             const offset = (page - 1) * limit;
-            const events = await calendarManager.listEvents(limit, offset);
-            res.json(events);
+            const result = await calendarManager.listEvents(limit, offset);
+            res.json({
+                ...result,
+                page,
+                limit,
+                totalDatabaseCount: result.total // For listEvents, total is totalDatabaseCount
+            });
         });
 
         app.get('/api/events/search', async (req, res) => {
@@ -64,8 +69,12 @@ describe('Server API Endpoints', () => {
                 return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
             }
 
-            const events = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
-            res.json(events);
+            const result = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
+            res.json({
+                ...result,
+                page,
+                limit
+            });
         });
 
         app.post('/api/events', async (req, res) => {
@@ -101,6 +110,17 @@ describe('Server API Endpoints', () => {
                 res.status(404).json({ error: 'Event not found' });
             }
         });
+
+        app.get('/api/export', async (req, res) => {
+            try {
+                const icsData = await calendarManager.exportToICS();
+                res.setHeader('Content-Type', 'text/calendar');
+                res.setHeader('Content-Disposition', 'attachment; filename=calendar.ics');
+                res.send(icsData);
+            } catch (err) {
+                res.status(500).json({ error: err.message });
+            }
+        });
     });
 
     afterAll(() => {
@@ -119,6 +139,8 @@ describe('Server API Endpoints', () => {
             expect(response.body).toHaveProperty('events');
             expect(Array.isArray(response.body.events)).toBe(true);
             expect(response.body.events.length).toBeGreaterThan(0);
+            expect(response.body).toHaveProperty('totalDatabaseCount');
+            expect(typeof response.body.totalDatabaseCount).toBe('number');
         });
 
         it('should return events with correct structure', async () => {
@@ -156,6 +178,8 @@ describe('Server API Endpoints', () => {
             expect(response.body).toHaveProperty('events');
             expect(Array.isArray(response.body.events)).toBe(true);
             expect(response.body.events.length).toBeGreaterThan(0);
+            expect(response.body).toHaveProperty('totalDatabaseCount');
+            expect(typeof response.body.totalDatabaseCount).toBe('number');
         });
 
         it('should return 400 when query parameter is missing', async () => {
@@ -483,6 +507,34 @@ describe('Server API Endpoints', () => {
 
             const deletedEvent = finalListResponse.body.events.find(e => e.uid === uid);
             expect(deletedEvent).toBeUndefined();
+        });
+    });
+
+    describe('GET /api/export', () => {
+        it('should export events as iCalendar', async () => {
+            // Add a test event to export
+            await request(app)
+                .post('/api/events')
+                .send({
+                    summary: 'Export Test Event',
+                    startDate: '2025-05-01T10:00:00Z',
+                    endDate: '2025-05-01T11:00:00Z'
+                })
+                .expect(201);
+
+            const response = await request(app)
+                .get('/api/export')
+                .expect(200);
+
+            expect(response.headers['content-type']).toMatch(/text\/calendar/);
+            expect(response.headers['content-disposition']).toMatch(/attachment; filename=calendar.ics/);
+            
+            const body = response.text;
+            expect(body).toContain('BEGIN:VCALENDAR');
+            expect(body).toContain('END:VCALENDAR');
+            expect(body).toContain('BEGIN:VEVENT');
+            expect(body).toContain('SUMMARY:Export Test Event');
+            expect(body).toContain('END:VEVENT');
         });
     });
 });

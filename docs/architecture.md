@@ -51,6 +51,7 @@ The `CalendarManager` class orchestrates the application logic, bridging the gap
   - Calling `Database` methods for event management.
   - Data transformation: Converts database rows into JSON objects for consumers.
   - Date format conversion: The `ensureSeconds` helper function ensures dates are in proper ISO 8601 format with seconds (`YYYY-MM-DDTHH:mm:ss`) as required by `ical.js`.
+  - **Event Preparation**: Uses a shared `_prepareEventData` method to normalize dates and generate `raw_data` consistently for both creation and updates.
 
 ### 3. Command Line Interface (`index.js`)
 
@@ -71,12 +72,12 @@ The web server exposes the core logic via a RESTful API and serves the frontend 
 
 - **Framework:** `express`.
 - **API Endpoints:**
-  - `GET /api/events`: Retrieve events (paginated).
-  - `GET /api/events/search`: Search events by query or date range (paginated).
+  - `GET /api/events`: Retrieve events (paginated, supports sorting and filtering).
+  - `GET /api/events/search`: Search events by query, date range, or filters (paginated).
   - `POST /api/events`: Create a new event.
   - `PUT /api/events/:uid`: Update an existing event.
   - `DELETE /api/events/:uid`: Delete an event.
-  - `GET /api/export`: Download the calendar as `.ics`.
+  - `GET /api/export`: Download the calendar as `.ics` (supports filtering).
 - **Data Persistence:** SQLite database (`calendar.db` by default).
 
 ### 5. Frontend (`public/`)
@@ -89,9 +90,11 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
   - Rendering the Event List and **Infinite Scroll** functionality (using `IntersectionObserver`).
   - Rendering the Calendar View (using `jcalendar.js`).
   - Managing UI state (Modals including Delete Confirmation, Tabs, Theme, Time Format, Console Overlay).
+  - Managing Filters (Search, Date Range, All Day, Recurring, Sort Order).
   - Form submissions (Add/Edit/Import).
   - Error handling via console-style overlay (silent success, visible errors).
 - **`style.css`:** Custom CSS variables and styles for a modern, responsive UI.
+  - **Sticky Header:** The header containing search and filters is sticky to ensure controls are always accessible.
   - **CSS Variables:** Theme variables for light/dark mode (colors, shadows)
   - **Glassmorphism Effects:** Uses both `backdrop-filter` and `-webkit-backdrop-filter` properties for cross-browser compatibility (especially Safari)
   - **Responsive Design:** Mobile-first approach with media queries
@@ -118,6 +121,8 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
 4. `CalendarManager` queries the `Database`.
 5. `Database` executes `SELECT * FROM events LIMIT 100 OFFSET 0` and `SELECT COUNT(*)`.
 6. Results are returned as JSON `{ events, total, totalDatabaseCount, page, limit }` to the frontend.
+   - `total`: Total count of events matching the current filter (or all events if no filter).
+   - `totalDatabaseCount`: Total count of ALL events in the database (useful for UI context).
 
 ## Date Handling
 

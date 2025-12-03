@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
     const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const sortToggleBtn = document.getElementById('sortToggleBtn');
     let eventToDeleteId = null;
     const exportBtn = document.createElement('button'); // Create export button dynamically or assume it exists
 
@@ -44,7 +45,23 @@ document.addEventListener('DOMContentLoaded', () => {
     exportBtn.className = 'btn-secondary btn-sm';
     exportBtn.innerHTML = '<i class="ph ph-upload-simple"></i> Export';
     exportBtn.onclick = () => {
-        window.location.href = '/api/export';
+        const params = new URLSearchParams();
+        const query = searchInput.value.trim();
+        const startDate = startDateFilter.value;
+        const endDate = endDateFilter.value;
+
+        if (query) params.append('q', query);
+        if (startDate) params.append('start', startDate);
+        if (endDate) params.append('end', endDate);
+        if (filters.isAllDay) params.append('isAllDay', 'true');
+        if (filters.isRecurring) params.append('isRecurring', 'true');
+        
+        // Also respect sort order? The user didn't explicitly ask, but "export things that are in the filter" usually implies just filtering.
+        // But sorting might be nice. Let's include it for consistency if easy, but maybe not critical.
+        // The user said "only export things that are in the filter".
+        // Let's stick to filters.
+        
+        window.location.href = `/api/export?${params.toString()}`;
     };
     document.querySelector('.header-actions').insertBefore(exportBtn, document.getElementById('settingsBtn'));
 
@@ -57,6 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const limit = 100; // Load 100 events at a time
     let isLoading = false;
     let observer = null;
+    let currentSortDir = 'ASC';
+    const filters = {
+        isAllDay: false,
+        isRecurring: false
+    };
 
 
     // Theme Logic
@@ -366,7 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams();
         
         params.append('page', currentPage);
+        params.append('page', currentPage);
         params.append('limit', limit);
+        params.append('sortDir', currentSortDir);
+        params.append('isAllDay', filters.isAllDay);
+        params.append('isRecurring', filters.isRecurring);
 
         if (query) params.append('q', query);
         if (startDate) params.append('start', startDate);
@@ -622,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let response;
             if (uid) {
-                response = await fetch(`/api/events/${uid}`, {
+                response = await fetch(`/api/events/${encodeURIComponent(uid)}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(eventData)
@@ -654,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete event
     async function deleteEvent(uid) {
         try {
-            const response = await fetch(`/api/events/${uid}`, { method: 'DELETE' });
+            const response = await fetch(`/api/events/${encodeURIComponent(uid)}`, { method: 'DELETE' });
             if (response.ok) {
                 showConsoleMessage('Event deleted successfully', 'success');
                 if (currentView === 'list') {
@@ -706,6 +732,36 @@ document.addEventListener('DOMContentLoaded', () => {
     startDateFilter.addEventListener('change', handleSearch);
     endDateFilter.addEventListener('change', handleSearch);
 
+    if (sortToggleBtn) {
+        sortToggleBtn.addEventListener('click', () => {
+            currentSortDir = currentSortDir === 'ASC' ? 'DESC' : 'ASC';
+            const icon = sortToggleBtn.querySelector('i');
+            if (currentSortDir === 'ASC') {
+                icon.className = 'ph ph-sort-ascending';
+            } else {
+                icon.className = 'ph ph-sort-descending';
+            }
+        });
+    }
+
+    // Filter Logic
+    const filterAllDay = document.getElementById('filterAllDay');
+    const filterRecurring = document.getElementById('filterRecurring');
+    const filterNoTitle = document.getElementById('filterNoTitle');
+
+    if (filterAllDay) {
+        filterAllDay.addEventListener('change', (e) => {
+            filters.isAllDay = e.target.checked;
+            fetchEvents();
+        });
+    }
+    if (filterRecurring) {
+        filterRecurring.addEventListener('change', (e) => {
+            filters.isRecurring = e.target.checked;
+            fetchEvents();
+        });
+    }
+
     function updateSearchVisibility() {
         if (currentView === 'list') {
             searchContainer.style.display = 'flex';
@@ -733,4 +789,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateSearchVisibility();
     fetchEvents();
+
+    // Back to Top Logic
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    
+    if (backToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100 || document.documentElement.scrollTop > 100) {
+                backToTopBtn.style.display = 'flex';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
 });

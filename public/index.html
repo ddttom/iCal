@@ -45,10 +45,9 @@
                 </button>
             </div>
         </div>
-    </header>
-
-    <div class="container">
-        <div class="toolbar">
+        </div>
+        </div>
+        <div class="header-toolbar">
             <div class="search-container">
                 <div class="search-wrapper">
                     <i class="ph ph-magnifying-glass"></i>
@@ -59,8 +58,24 @@
                 </div>
                 <input type="date" id="startDateFilter" aria-label="Start Date Filter">
                 <input type="date" id="endDateFilter" aria-label="End Date Filter">
+                <button id="sortToggleBtn" class="btn-icon" aria-label="Toggle Sort Order">
+                    <i class="ph ph-sort-ascending"></i>
+                </button>
+            </div>
+            <div class="filters-row">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filterAllDay"> All Day
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filterRecurring"> Recurring
+                </label>
+
             </div>
         </div>
+    </header>
+
+    <div class="container">
+        <!-- Toolbar moved to header -->
 
         <main>
             <section id="listViewSection" class="event-list-section">
@@ -70,15 +85,12 @@
                 </div>
             </section>
 
-            <section id="calendarViewSection" class="calendar-view-section" style="display: none;">
+            <section id="calendarViewSection" class="calendar-view-section">
                 <div id="calendar" class="calendar-container"></div>
             </section>
         </main>
 
-        <!-- Floating Action Button -->
-        <button id="fabAddEvent" class="fab" aria-label="Add Event">
-            <i class="ph ph-plus"></i>
-        </button>
+
     </div>
 
     <!-- Modal -->
@@ -86,8 +98,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Add Event</h2>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button id="viewRawBtn" class="btn-icon" aria-label="View Raw Data" style="display: none;"><i
+                <div class="flex-center-gap">
+                    <button id="viewRawBtn" class="btn-icon hidden" aria-label="View Raw Data"><i
                             class="ph ph-code"></i></button>
                     <span class="close-modal" id="closeModalBtn"><i class="ph ph-x"></i></span>
                 </div>
@@ -121,10 +133,10 @@
                     <input type="text" id="rrule" name="rrule" placeholder="e.g., FREQ=WEEKLY;BYDAY=MO">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" id="deleteEventBtn" class="btn-danger" style="display: none;">
+                    <button type="button" id="deleteEventBtn" class="btn-danger hidden">
                         <i class="ph ph-trash"></i> Delete
                     </button>
-                    <div style="flex: 1;"></div> <!-- Spacer -->
+                    <div class="flex-spacer"></div> <!-- Spacer -->
                     <button type="button" id="cancelEventBtn" class="btn-secondary">
                         <i class="ph ph-x"></i> Cancel
                     </button>
@@ -141,11 +153,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Raw Event Data</h2>
-                <button class="close-modal" id="closeViewModalBtn"><i class="ph ph-x"></i></button>
+                <button class="close-modal" id="closeViewModalBtn" aria-label="Close Modal"><i
+                        class="ph ph-x"></i></button>
             </div>
             <div class="modal-body">
-                <pre id="rawEventContent"
-                    style="background: #f4f4f4; padding: 1rem; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; font-family: monospace;"></pre>
+                <pre id="rawEventContent" class="raw-content"></pre>
             </div>
         </div>
     </div>
@@ -159,7 +171,7 @@
             </div>
             <div class="modal-body">
                 <p>Paste your iCal (.ics) content below:</p>
-                <textarea id="importContent" rows="10" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem;"
+                <textarea id="importContent" rows="10" class="w-100 mb-1 p-0-5"
                     placeholder="BEGIN:VCALENDAR..."></textarea>
                 <div class="modal-actions">
                     <button type="button" id="cancelImportBtn" class="btn-secondary">Cancel</button>
@@ -171,7 +183,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteConfirmModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content modal-content-sm">
             <div class="modal-header">
                 <h2>Delete Event</h2>
                 <span class="close-modal" id="closeDeleteModalBtn"><i class="ph ph-x"></i></span>
@@ -191,7 +203,8 @@
         <div class="settings-panel">
             <div class="settings-header">
                 <h2>Settings</h2>
-                <button id="closeSettingsBtn" class="close-modal"><i class="ph ph-x"></i></button>
+                <button id="closeSettingsBtn" class="close-modal" aria-label="Close Settings"><i
+                        class="ph ph-x"></i></button>
             </div>
             <div class="settings-content">
                 <div class="setting-item">
@@ -201,7 +214,7 @@
                         <button class="theme-btn" data-theme="dark"><i class="ph ph-moon"></i> Dark</button>
                     </div>
                 </div>
-                <div class="setting-item" style="margin-top: 1.5rem;">
+                <div class="setting-item mt-1-5">
                     <h3>Time Format</h3>
                     <div class="theme-switcher">
                         <button class="time-fmt-btn" data-format="12h">12h</button>
@@ -220,7 +233,7 @@
                     <i class="ph ph-terminal"></i>
                     <span>Application Console</span>
                 </div>
-                <button class="console-close" id="closeConsoleBtn">
+                <button class="console-close" id="closeConsoleBtn" aria-label="Close Console">
                     <i class="ph ph-x"></i>
                 </button>
             </div>
@@ -234,6 +247,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Action Button -->
+    <button id="fabAddEvent" class="fab" aria-label="Add Event">
+        <i class="ph ph-plus"></i>
+    </button>
+
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="fab fab-secondary fab-bottom-offset hidden" aria-label="Back to Top">
+        <i class="ph ph-arrow-up"></i>
+    </button>
 
     <script src="lib/calendar.min.js"></script>
     <script src="/lib/ical.js"></script>

@@ -64,7 +64,7 @@ program
     .description('List all events (first 100)')
     .action(async () => {
         try {
-            const events = await calendarManager.listEvents(100);
+            const { events } = await calendarManager.listEvents(100);
             if (events.length === 0) {
                 console.log('No events found.');
             } else {
@@ -84,7 +84,7 @@ program
     .description('Search events')
     .action(async (query) => {
         try {
-            const events = await calendarManager.searchEvents(query);
+            const { events } = await calendarManager.searchEvents(query);
             if (events.length === 0) {
                 console.log('No matching events found.');
             } else {
