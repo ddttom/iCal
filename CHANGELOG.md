@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Git Configuration**: Removed `calendar.db` from git tracking and added it to `.gitignore` to prevent repository bloat and push errors.
+- **Delete Confirmation**: Fixed an issue where the delete confirmation popup would disappear immediately by replacing the native `confirm()` dialog with a custom, styled modal.
 
 ### Documentation
 

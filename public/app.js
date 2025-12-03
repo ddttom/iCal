@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelImportBtn = document.getElementById('cancelImportBtn');
     const processImportBtn = document.getElementById('processImportBtn');
     const importContent = document.getElementById('importContent');
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    let eventToDeleteId = null;
     const exportBtn = document.createElement('button'); // Create export button dynamically or assume it exists
 
     // Add Export Button to Header Actions
@@ -145,11 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('endDate').value = formatDate(event.endDate.dateTime);
             }
             deleteEventBtn.style.display = 'flex';
-            deleteEventBtn.onclick = async () => {
-                if (confirm('Are you sure you want to delete this event?')) {
-                    await deleteEvent(event.uid);
-                    closeModal();
-                }
+            deleteEventBtn.onclick = () => {
+                openDeleteModal(event.uid);
             };
         } else {
             modalTitle.textContent = 'Add Event';
@@ -206,6 +208,31 @@ document.addEventListener('DOMContentLoaded', () => {
     closeImportModalBtn.addEventListener('click', closeImportModal);
     cancelImportBtn.addEventListener('click', closeImportModal);
     importEventModal.addEventListener('click', (e) => { if (e.target === importEventModal) closeImportModal(); });
+
+    // Delete Modal Logic
+    function openDeleteModal(uid) {
+        eventToDeleteId = uid;
+        deleteConfirmModal.classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        deleteConfirmModal.classList.remove('active');
+        eventToDeleteId = null;
+    }
+
+    closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    deleteConfirmModal.addEventListener('click', (e) => { if (e.target === deleteConfirmModal) closeDeleteModal(); });
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (eventToDeleteId) {
+            await deleteEvent(eventToDeleteId);
+            closeDeleteModal();
+            if (addEventModal.classList.contains('active')) {
+                closeModal();
+            }
+        }
+    });
 
     processImportBtn.addEventListener('click', async () => {
         const icalData = importContent.value.trim();
@@ -447,12 +474,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+            btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const uid = e.target.dataset.uid;
-                if (confirm('Are you sure you want to delete this event?')) {
-                    await deleteEvent(uid);
-                }
+                // Fix: Use currentTarget to get the button element, not the icon
+                const uid = e.currentTarget.dataset.uid;
+                openDeleteModal(uid);
             });
         });
     }
