@@ -441,7 +441,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeStyle: 'short',
                 hour12: timeFormat === '12h'
             }) : '';
-            const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
+            const dateStr = event.isAllDay 
+                ? `${startDateObj.toLocaleDateString(undefined, { dateStyle: 'medium' })} <span class="badge badge-info">All Day</span>`
+                : (endDate ? `${startDate} - ${endDate}` : startDate);
 
             card.innerHTML = `
                 <div class="event-info">
@@ -628,11 +630,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Search functionality
     let debounceTimer;
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
     const handleSearch = () => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => fetchEvents(), 300);
+        
+        // Toggle clear button visibility
+        if (searchInput.value.length > 0) {
+            clearSearchBtn.style.display = 'flex';
+        } else {
+            clearSearchBtn.style.display = 'none';
+        }
     };
     searchInput.addEventListener('input', handleSearch);
+    
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchBtn.style.display = 'none';
+        fetchEvents();
+        searchInput.focus();
+    });
     startDateFilter.addEventListener('change', handleSearch);
     endDateFilter.addEventListener('change', handleSearch);
 
