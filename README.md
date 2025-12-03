@@ -22,7 +22,8 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
   - **Standardized Time**: All times are displayed in 24-hour format. Supports both absolute (UTC) and floating (local) times for accurate scheduling.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
-  - **Import Functionality**: Easily import existing iCal (.ics) data.
+  - **Import/Export**: Easily import existing iCal (.ics) data into the database and export it back.
+  - **Scalability**: Powered by SQLite to handle large datasets (100MB+) with pagination support.
   - **Modern UI**: A professional, responsive interface featuring a fixed glassmorphism header and Phosphor Icons.
 
 ## UI & Design
@@ -83,28 +84,50 @@ npm --version
 
    *Note: This project uses `jcalendar.js` for the calendar interface. The library files are included in `public/lib/`. and <https://github.com/kewisch/ical.js/> for iCal parsing.*
 
+3. Database Setup:
+   The application uses a SQLite database (`calendar.db`) to store events. This file will be automatically created in the root directory when you start the application. No manual setup is required, but ensure the directory is writable.
+
+4. (Optional) Symlink `agents.md`:
+   If you are using the agentic workflow, create a symlink for `agents.md`:
+
+   ```bash
+   ln -s /path/to/agents.md agents.md
+   ```
+
 ## Usage
 
 ### CLI
 
 The CLI tool is located at `index.js`.
 
+**Import Events:**
+
+```bash
+node index.js load calendar.ics
+```
+
+**Export Events:**
+
+```bash
+node index.js export my_calendar.ics
+```
+
 **List Events:**
 
 ```bash
-node index.js list -f calendar.ics
+node index.js list
 ```
 
 **Search Events:**
 
 ```bash
-node index.js search "Meeting" -f calendar.ics
+node index.js search "Meeting"
 ```
 
 **Add Event:**
 
 ```bash
-node index.js add -f calendar.ics
+node index.js add
 ```
 
 (Follow the interactive prompts)
@@ -112,7 +135,7 @@ node index.js add -f calendar.ics
 **Delete Event:**
 
 ```bash
-node index.js delete <UID> -f calendar.ics
+node index.js delete <UID>
 ```
 
 ### Web GUI
@@ -149,7 +172,8 @@ iCal/
 ├── index.js           # CLI entry point
 ├── server.js          # Express server for Web GUI
 ├── lib/               # Core logic
-│   ├── calendar.js    # CalendarManager class
+│   ├── calendar.js    # CalendarManager class (Business Logic)
+│   ├── database.js    # Database abstraction layer (SQLite)
 │   └── utils.js       # Utility functions
 ├── public/            # Frontend assets (HTML, CSS, JS)
 ├── test/              # Test files

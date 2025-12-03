@@ -34,11 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelImportBtn = document.getElementById('cancelImportBtn');
     const processImportBtn = document.getElementById('processImportBtn');
     const importContent = document.getElementById('importContent');
+    const exportBtn = document.createElement('button'); // Create export button dynamically or assume it exists
+
+    // Add Export Button to Header Actions
+    exportBtn.className = 'btn-secondary btn-sm';
+    exportBtn.innerHTML = '<i class="ph ph-upload-simple"></i> Export';
+    exportBtn.onclick = () => {
+        window.location.href = '/api/export';
+    };
+    document.querySelector('.header-actions').insertBefore(exportBtn, document.getElementById('settingsBtn'));
 
     // State
     let currentView = localStorage.getItem('currentView') || 'month';
     let allEvents = [];
     let calendarInstance = null;
+    let currentPage = 1;
+    const limit = 100; // Load 100 events at a time
+
 
     // Theme Logic
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -280,22 +292,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fetch and display events
-    async function fetchEvents() {
+    async function fetchEvents(reset = true) {
+        if (reset) {
+            currentPage = 1;
+            allEvents = [];
+        }
+
         const query = searchInput.value;
         const startDate = startDateFilter.value;
         const endDate = endDateFilter.value;
         let url = '/api/events';
         const params = new URLSearchParams();
+        
+        params.append('page', currentPage);
+        params.append('limit', limit);
+
         if (query) params.append('q', query);
         if (startDate) params.append('start', startDate);
         if (endDate) params.append('end', endDate);
-        if (params.toString()) url += `/search?${params.toString()}`;
+        
+        // If searching, use search endpoint
+        if (query || startDate || endDate) {
+             url += `/search`;
+        }
+        
+        url += `?${params.toString()}`;
 
         try {
             const response = await fetch(url);
-            allEvents = await response.json();
+            const newEvents = await response.json();
+            
+            if (reset) {
+                allEvents = newEvents;
+            } else {
+                allEvents = [...allEvents, ...newEvents];
+            }
+
             if (currentView === 'list') {
                 renderEvents(allEvents);
+                // Add "Load More" button if we got full limit
+                if (newEvents.length === limit) {
+                    addLoadMoreButton();
+                }
             } else {
                 renderCalendar();
             }
@@ -303,6 +341,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching events:', error);
             showToast('Failed to load events', 'error');
         }
+    }
+
+    function addLoadMoreButton() {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'btn-secondary';
+        loadMoreBtn.style.margin = '1rem auto';
+        loadMoreBtn.style.display = 'block';
+        loadMoreBtn.textContent = 'Load More';
+        loadMoreBtn.onclick = () => {
+            currentPage++;
+            fetchEvents(false);
+            loadMoreBtn.remove();
+        };
+        eventList.appendChild(loadMoreBtn);
     }
 
     // Render events to DOM (List View)

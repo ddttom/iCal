@@ -1,8 +1,10 @@
 node_modules/
 .DS_Store
 *.ics
+*.zip
 !calendar.ics
 !test/fixtures/*.ics
+*.db
 
 .env
 

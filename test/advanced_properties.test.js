@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const ICAL = require('ical.js');
 
-const testCalendarPath = path.join(__dirname, 'temp', 'test-advanced.ics');
+const testDbPath = path.join(__dirname, 'temp', 'test-advanced.db');
 const testDir = path.join(__dirname, 'temp');
 
 describe('Advanced iCal Properties', () => {
@@ -15,11 +15,12 @@ describe('Advanced iCal Properties', () => {
         }
     });
 
-    beforeEach(() => {
-        if (fs.existsSync(testCalendarPath)) {
-            fs.unlinkSync(testCalendarPath);
+    beforeEach(async () => {
+        if (fs.existsSync(testDbPath)) {
+            fs.unlinkSync(testDbPath);
         }
-        calendarManager = new CalendarManager(testCalendarPath);
+        calendarManager = new CalendarManager(testDbPath);
+        await calendarManager.init();
     });
 
     afterAll(() => {
@@ -28,10 +29,10 @@ describe('Advanced iCal Properties', () => {
         }
     });
 
-    it('should add an event with organizer and attendees', () => {
+    it('should add an event with organizer and attendees', async () => {
         const eventData = {
             summary: 'Meeting with Team',
-            startDate: new Date(),
+            startDate: new Date().toISOString(),
             organizer: { name: 'Boss', email: 'boss@example.com' },
             attendees: [
                 { name: 'Alice', email: 'alice@example.com', role: 'REQ-PARTICIPANT', status: 'ACCEPTED' },
@@ -39,11 +40,10 @@ describe('Advanced iCal Properties', () => {
             ]
         };
 
-        calendarManager.addEvent(eventData);
-        calendarManager.save();
+        await calendarManager.addEvent(eventData);
 
-        // Verify file content
-        const content = fs.readFileSync(testCalendarPath, 'utf-8');
+        // Verify via export
+        const content = await calendarManager.exportToICS();
         const jcal = ICAL.parse(content);
         const comp = new ICAL.Component(jcal);
         const vevent = comp.getFirstSubcomponent('vevent');
@@ -62,18 +62,17 @@ describe('Advanced iCal Properties', () => {
         expect(alice.getParameter('partstat')).toBe('ACCEPTED');
     });
 
-    it('should add an event with status and categories', () => {
+    it('should add an event with status and categories', async () => {
         const eventData = {
             summary: 'Project Review',
-            startDate: new Date(),
+            startDate: new Date().toISOString(),
             status: 'CONFIRMED',
             categories: ['WORK', 'PROJECT']
         };
 
-        calendarManager.addEvent(eventData);
-        calendarManager.save();
+        await calendarManager.addEvent(eventData);
 
-        const content = fs.readFileSync(testCalendarPath, 'utf-8');
+        const content = await calendarManager.exportToICS();
         const jcal = ICAL.parse(content);
         const comp = new ICAL.Component(jcal);
         const vevent = comp.getFirstSubcomponent('vevent');
@@ -86,20 +85,19 @@ describe('Advanced iCal Properties', () => {
         expect(cats).toContain('PROJECT');
     });
 
-    it('should add an event with an alarm', () => {
+    it('should add an event with an alarm', async () => {
         const eventData = {
             summary: 'Alarm Test',
-            startDate: new Date(),
+            startDate: new Date().toISOString(),
             alarm: {
                 trigger: '-PT30M',
                 description: 'Wake up!'
             }
         };
 
-        calendarManager.addEvent(eventData);
-        calendarManager.save();
+        await calendarManager.addEvent(eventData);
 
-        const content = fs.readFileSync(testCalendarPath, 'utf-8');
+        const content = await calendarManager.exportToICS();
         const jcal = ICAL.parse(content);
         const comp = new ICAL.Component(jcal);
         const vevent = comp.getFirstSubcomponent('vevent');

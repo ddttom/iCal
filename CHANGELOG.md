@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-12-03
+
+### Added
+
+- **SQLite Database**: Migrated data storage from flat `.ics` files to a SQLite database for improved performance and scalability.
+- **Pagination**: Implemented pagination for API endpoints and Frontend to efficiently handle large datasets (100MB+).
+- **Export Functionality**: Added ability to export the calendar database back to an `.ics` file via CLI and Web GUI.
+- **CLI Import**: New `load` command in CLI to bulk import events from `.ics` files into the database.
+
+### Changed
+
+- **Architecture**: Refactored `CalendarManager` to interact with `lib/database.js` instead of direct file manipulation.
+- **Performance**: Significant performance improvements for loading and searching events, especially with large files.
+- **Dependencies**: Added `sqlite3` dependency. Removed `date-fns`.
+
 ## [1.7.0] - 2025-12-02
 
 ### Added

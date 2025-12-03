@@ -9,162 +9,137 @@ const { fileExists } = require('./lib/utils');
 const program = new Command();
 const calendarManager = new CalendarManager();
 
+// Initialize DB and start CLI
+(async () => {
+    try {
+        await calendarManager.init();
+        program.parse(process.argv);
+    } catch (err) {
+        console.error('Failed to initialize database:', err);
+        process.exit(1);
+    }
+})();
+
 program
     .name('ical-cli')
-    .description('CLI to manage iCal files')
+    .description('CLI to manage iCal files via SQLite Database')
     .version('1.0.0');
 
 program
     .command('load <file>')
-    .description('Load an iCal file')
-    .action((file) => {
+    .description('Import an iCal file into the database')
+    .action(async (file) => {
         const filePath = path.resolve(file);
         if (!fileExists(filePath)) {
             console.error(`File not found: ${filePath}`);
-            // Ask if user wants to create a new one
-            inquirer.prompt([
-                {
-                    type: 'confirm',
-                    name: 'create',
-                    message: 'File does not exist. Do you want to create a new calendar at this path?',
-                    default: true
-                }
-            ]).then(answers => {
-                if (answers.create) {
-                    calendarManager.filePath = filePath;
-                    calendarManager.addEvent({ summary: 'Initial Event', startDate: new Date() }); // Initialize
-                    if (calendarManager.save()) {
-                        console.log(`Created new calendar at ${filePath}`);
-                    }
-                }
-            });
             return;
         }
-        calendarManager.filePath = filePath;
-        if (calendarManager.load()) {
-            console.log(`Loaded calendar from ${filePath}`);
+        
+        console.log(`Importing ${filePath}...`);
+        try {
+            const count = await calendarManager.importFromICS(filePath);
+            console.log(`Successfully imported ${count} events.`);
+        } catch (err) {
+            console.error('Import failed:', err.message);
+        }
+    });
+
+program
+    .command('export <file>')
+    .description('Export database to an iCal file')
+    .action(async (file) => {
+        const filePath = path.resolve(file);
+        try {
+            const icsData = await calendarManager.exportToICS();
+            const fs = require('fs');
+            fs.writeFileSync(filePath, icsData);
+            console.log(`Exported calendar to ${filePath}`);
+        } catch (err) {
+            console.error('Export failed:', err.message);
         }
     });
 
 program
     .command('list')
-    .description('List all events')
-    .option('-f, --file <file>', 'Path to iCal file')
-    .action((options) => {
-        if (options.file) {
-            calendarManager.filePath = path.resolve(options.file);
-            calendarManager.load();
-        }
-    
-        if (!calendarManager.comp && !options.file) {
-            console.error('No calendar loaded. Use "load <file>" or provide -f option.');
-            return;
-        }
-
-        const events = calendarManager.listEvents();
-        if (events.length === 0) {
-            console.log('No events found.');
-        } else {
-            console.table(events.map(e => ({
-                Summary: e.summary,
-                Start: e.startDate ? e.startDate.toLocaleString() : 'N/A',
-                UID: e.uid
-            })));
+    .description('List all events (first 100)')
+    .action(async () => {
+        try {
+            const events = await calendarManager.listEvents(100);
+            if (events.length === 0) {
+                console.log('No events found.');
+            } else {
+                console.table(events.map(e => ({
+                    Summary: e.summary,
+                    Start: e.startDate ? e.startDate.dateTime : 'N/A',
+                    UID: e.uid
+                })));
+            }
+        } catch (err) {
+            console.error('Error listing events:', err.message);
         }
     });
 
 program
     .command('search <query>')
     .description('Search events')
-    .option('-f, --file <file>', 'Path to iCal file')
-    .action((query, options) => {
-        if (options.file) {
-            calendarManager.filePath = path.resolve(options.file);
-            calendarManager.load();
-        }
-
-        if (!calendarManager.comp && !options.file) {
-            console.error('No calendar loaded. Use "load <file>" or provide -f option.');
-            return;
-        }
-
-        const events = calendarManager.searchEvents(query);
-        if (events.length === 0) {
-            console.log('No matching events found.');
-        } else {
-            console.table(events.map(e => ({
-                Summary: e.summary,
-                Start: e.startDate ? e.startDate.toLocaleString() : 'N/A',
-                UID: e.uid
-            })));
+    .action(async (query) => {
+        try {
+            const events = await calendarManager.searchEvents(query);
+            if (events.length === 0) {
+                console.log('No matching events found.');
+            } else {
+                console.table(events.map(e => ({
+                    Summary: e.summary,
+                    Start: e.startDate ? e.startDate.dateTime : 'N/A',
+                    UID: e.uid
+                })));
+            }
+        } catch (err) {
+            console.error('Error searching events:', err.message);
         }
     });
 
 program
     .command('add')
     .description('Add a new event')
-    .option('-f, --file <file>', 'Path to iCal file')
-    .action(async (options) => {
-        let filePath = options.file ? path.resolve(options.file) : calendarManager.filePath;
-
-        if (!filePath) {
-            const answer = await inquirer.prompt([{
-                type: 'input',
-                name: 'file',
-                message: 'Path to iCal file:'
-            }]);
-            filePath = path.resolve(answer.file);
-        }
-
-        calendarManager.filePath = filePath;
-        if (fileExists(filePath)) {
-            calendarManager.load();
-        }
-
+    .action(async () => {
         const answers = await inquirer.prompt([
             { type: 'input', name: 'summary', message: 'Event Summary:' },
             { type: 'input', name: 'description', message: 'Description (optional):' },
             { type: 'input', name: 'location', message: 'Location (optional):' },
-            { type: 'input', name: 'startDate', message: 'Start Date (YYYY-MM-DD HH:mm):' },
-            { type: 'input', name: 'endDate', message: 'End Date (YYYY-MM-DD HH:mm) (optional):' }
+            { type: 'input', name: 'startDate', message: 'Start Date (YYYY-MM-DDTHH:mm:ss):' },
+            { type: 'input', name: 'endDate', message: 'End Date (YYYY-MM-DDTHH:mm:ss) (optional):' }
         ]);
 
         const eventData = {
             summary: answers.summary,
             description: answers.description,
             location: answers.location,
-            startDate: answers.startDate ? new Date(answers.startDate) : new Date(),
-            endDate: answers.endDate ? new Date(answers.endDate) : null
+            startDate: answers.startDate, // Expect ISO string
+            endDate: answers.endDate || null
         };
 
-        const uid = calendarManager.addEvent(eventData);
-        if (calendarManager.save()) {
+        try {
+            const uid = await calendarManager.addEvent(eventData);
             console.log(`Event added successfully. UID: ${uid}`);
+        } catch (err) {
+            console.error('Error adding event:', err.message);
         }
     });
 
 program
     .command('delete <uid>')
     .description('Delete an event by UID')
-    .option('-f, --file <file>', 'Path to iCal file')
-    .action((uid, options) => {
-        if (options.file) {
-            calendarManager.filePath = path.resolve(options.file);
-            calendarManager.load();
-        }
-
-        if (!calendarManager.comp && !options.file) {
-            console.error('No calendar loaded. Use "load <file>" or provide -f option.');
-            return;
-        }
-
-        if (calendarManager.deleteEvent(uid)) {
-            if (calendarManager.save()) {
+    .action(async (uid) => {
+        try {
+            if (await calendarManager.deleteEvent(uid)) {
                 console.log(`Event ${uid} deleted.`);
+            } else {
+                console.error(`Event ${uid} not found.`);
             }
-        } else {
-            console.error(`Event ${uid} not found.`);
+        } catch (err) {
+            console.error('Error deleting event:', err.message);
         }
     });
 
-program.parse(process.argv);
+
