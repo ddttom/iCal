@@ -12,15 +12,26 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
 - **CLI**: Load, list, search, add, update, and delete events from the command line.
 - **Web GUI**: A premium, modern web interface with:
   - **Dynamic UI**: Glassmorphism design, smooth animations, and responsive layout.
-  - **Multiple Views**: Switch between Month, Week, and Day views to visualize your schedule.
+  - **Interactive Calendar**: Powered by **jcalendar.js**, offering a robust and feature-rich calendar interface.
+  - **Multiple Views**: Seamlessly switch between Month, Week, Day, and List views.
   - **View Persistence**: Automatically remembers your last selected view across sessions.
   - **Dark Mode**: Built-in dark theme support with a toggle switch for comfortable viewing in low-light environments.
-  - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and toast notifications.
+  - **Interactive Elements**: Floating Action Button (FAB) and Header Buttons for quick event creation, modal forms for adding/editing events, and a console-style error overlay for debugging.
   - **Real-time Search & Filtering**: Instant text search and date range filtering.
-  - **Event Management**: View details, edit existing events, and delete events directly from the UI.
+  - **Event Management**: View details, edit existing events (with Cancel/Delete actions), and delete events directly from the UI with a custom confirmation modal.
   - **Raw Data Inspection**: View the underlying iCal data for any event using the "View Raw" feature.
   - **Standardized Time**: All times are displayed in 24-hour format. Supports both absolute (UTC) and floating (local) times for accurate scheduling.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
+  - **Import/Export**: Easily import existing iCal (.ics) data into the database and export it back.
+  - **Scalability**: Powered by SQLite to handle large datasets (100MB+) with **Pagination** and **Infinite Scroll** support.
+  - **Event Counts**: Real-time display of total events and currently showing count.
+  - **Modern UI**: A professional, responsive interface featuring a fixed glassmorphism header and Phosphor Icons.
+
+## UI & Design
+
+The application follows a strict design system to ensure a cohesive and professional look.
+For details on colors, typography, and components, please refer to the [Style Guide](docs/style-guide.md).
+
 - **Advanced Calendar Features**:
   - **Repeating Events**: Support for recurring events (Daily, Weekly, Monthly) via `RRULE`.
   - **Advanced Properties**: Support for Attendees, Organizers, Status, Categories, and Alarms (VALARM).
@@ -72,28 +83,52 @@ npm --version
    npm install
    ```
 
+   *Note: This project uses `jcalendar.js` for the calendar interface. The library files are included in `public/lib/`. and <https://github.com/kewisch/ical.js/> for iCal parsing.*
+
+3. Database Setup:
+   The application uses a SQLite database (`calendar.db`) to store events. This file will be automatically created in the root directory when you start the application. No manual setup is required, but ensure the directory is writable.
+
+4. (Optional) Symlink `agents.md`:
+   If you are using the agentic workflow, create a symlink for `agents.md`:
+
+   ```bash
+   ln -s /path/to/agents.md agents.md
+   ```
+
 ## Usage
 
 ### CLI
 
 The CLI tool is located at `index.js`.
 
+**Import Events:**
+
+```bash
+node index.js load calendar.ics
+```
+
+**Export Events:**
+
+```bash
+node index.js export my_calendar.ics
+```
+
 **List Events:**
 
 ```bash
-node index.js list -f calendar.ics
+node index.js list
 ```
 
 **Search Events:**
 
 ```bash
-node index.js search "Meeting" -f calendar.ics
+node index.js search "Meeting"
 ```
 
 **Add Event:**
 
 ```bash
-node index.js add -f calendar.ics
+node index.js add
 ```
 
 (Follow the interactive prompts)
@@ -101,7 +136,7 @@ node index.js add -f calendar.ics
 **Delete Event:**
 
 ```bash
-node index.js delete <UID> -f calendar.ics
+node index.js delete <UID>
 ```
 
 ### Web GUI
@@ -128,6 +163,7 @@ The Web GUI provides powerful filtering capabilities to help you find specific e
 
 2. **Date Filtering**: Use the date pickers next to the search bar:
     - **Start Date**: Show events that end after this date.
+    - **Empty States**: Smart empty states that distinguish between an empty database and empty search results, providing context-aware messages and actions.
     - **End Date**: Show events that start before this date.
     - **Date Range**: Set both start and end dates to find events within a specific period.
 
@@ -138,7 +174,8 @@ iCal/
 ├── index.js           # CLI entry point
 ├── server.js          # Express server for Web GUI
 ├── lib/               # Core logic
-│   ├── calendar.js    # CalendarManager class
+│   ├── calendar.js    # CalendarManager class (Business Logic)
+│   ├── database.js    # Database abstraction layer (SQLite)
 │   └── utils.js       # Utility functions
 ├── public/            # Frontend assets (HTML, CSS, JS)
 ├── test/              # Test files
@@ -151,8 +188,11 @@ iCal/
 │   └── ISSUE_TEMPLATE/ # Issue templates
 ├── package.json       # Project configuration
 ├── .markdownlint.json # Markdown linting configuration
+├── agents.md          # Agentic workflow context (optional)
 └── README.md          # This file
 ```
+
+For a detailed overview of the application architecture, please refer to [docs/architecture.md](docs/architecture.md).
 
 ## Development
 
@@ -225,6 +265,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Known Issues
 
 For a list of currently known issues and troubleshooting steps, please refer to [docs/problem.md](docs/problem.md).
+
+### Recent Changes
+
+- **v2.2.1 (2025-12-03)**: Improved Safari browser compatibility by adding `-webkit-backdrop-filter` prefixes to all glassmorphism UI elements (modal, settings panel, and empty states), ensuring consistent visual effects across all major browsers including Safari and iOS Safari.
+- **v2.2.0 (2025-12-03)**: Replaced toast notifications with a console-style error overlay. Success messages are now silent (logged to browser console only), while errors display in a detailed console overlay with timestamps and error details.
+- **v2.1.1 (2025-12-03)**: Fixed "Invalid Date Time" error when creating events. The application now properly handles `datetime-local` input format from the web interface by converting it to ISO 8601 format with seconds as required by `ical.js`.
 
 ---
 

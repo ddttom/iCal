@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fabAddEvent = document.getElementById('fabAddEvent');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const closeViewModalBtn = document.getElementById('closeViewModalBtn');
-    const toastContainer = document.getElementById('toastContainer');
+    const deleteEventBtn = document.getElementById('deleteEventBtn');
+    const cancelEventBtn = document.getElementById('cancelEventBtn');
     const rawEventContent = document.getElementById('rawEventContent');
     const settingsBtn = document.getElementById('settingsBtn');
     const headerAddEventBtn = document.getElementById('headerAddEventBtn');
@@ -21,34 +22,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const themeBtns = document.querySelectorAll('.theme-btn');
     const timeFmtBtns = document.querySelectorAll('.time-fmt-btn');
-
     const listViewBtn = document.getElementById('listViewBtn');
     const calendarViewBtn = document.getElementById('calendarViewBtn');
     const listViewSection = document.getElementById('listViewSection');
     const calendarViewSection = document.getElementById('calendarViewSection');
-    
-    // Calendar Navigation & Views
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const todayBtn = document.getElementById('todayBtn');
-    const currentDateLabel = document.getElementById('currentDateLabel');
-    
-    const monthViewBtn = document.getElementById('monthViewBtn');
-    const weekViewBtn = document.getElementById('weekViewBtn');
-    const dayViewBtn = document.getElementById('dayViewBtn');
-    
-    const monthViewContainer = document.getElementById('monthViewContainer');
-    const timeGridContainer = document.getElementById('timeGridContainer');
-    const calendarGrid = document.getElementById('calendarGrid');
-    const timeGridHeader = document.getElementById('timeGridHeader');
-    const timeGridContent = document.getElementById('timeGridContent');
-    const timeColumn = document.querySelector('.time-column');
-
-    let currentView = localStorage.getItem('currentView') || 'month'; // Default to 'month'
-    let currentCalendarDate = new Date();
-    let allEvents = []; // Store fetched events for calendar filtering
-
     const viewRawBtn = document.getElementById('viewRawBtn');
+    const importEventBtn = document.getElementById('importEventBtn');
+    const importEventModal = document.getElementById('importEventModal');
+    const closeImportModalBtn = document.getElementById('closeImportModalBtn');
+    const cancelImportBtn = document.getElementById('cancelImportBtn');
+    const processImportBtn = document.getElementById('processImportBtn');
+    const importContent = document.getElementById('importContent');
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    let eventToDeleteId = null;
+    const exportBtn = document.createElement('button'); // Create export button dynamically or assume it exists
+
+    // Add Export Button to Header Actions
+    exportBtn.className = 'btn-secondary btn-sm';
+    exportBtn.innerHTML = '<i class="ph ph-upload-simple"></i> Export';
+    exportBtn.onclick = () => {
+        window.location.href = '/api/export';
+    };
+    document.querySelector('.header-actions').insertBefore(exportBtn, document.getElementById('settingsBtn'));
+
+    // State
+    let currentView = localStorage.getItem('currentView') || 'month';
+    let allEvents = [];
+    let totalDatabaseCount = 0;
+    let calendarInstance = null;
+    let currentPage = 1;
+    const limit = 100; // Load 100 events at a time
+    let isLoading = false;
+    let observer = null;
+
 
     // Theme Logic
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -64,8 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-        
-        // Update active state of buttons
         themeBtns.forEach(btn => {
             if (btn.dataset.theme === theme) {
                 btn.classList.add('active');
@@ -83,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             const format = btn.dataset.format;
             setTimeFormat(format);
-            // Re-render current view
             if (currentView === 'list') {
                 renderEvents(allEvents);
             } else {
@@ -95,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function setTimeFormat(format) {
         timeFormat = format;
         localStorage.setItem('timeFormat', format);
-        
         timeFmtBtns.forEach(btn => {
             if (btn.dataset.format === format) {
                 btn.classList.add('active');
@@ -116,14 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     settingsBtn.addEventListener('click', openSettings);
     closeSettingsBtn.addEventListener('click', closeSettings);
-    
     settingsOverlay.addEventListener('click', (e) => {
-        if (e.target === settingsOverlay) {
-            closeSettings();
-        }
+        if (e.target === settingsOverlay) closeSettings();
     });
-
-    // Escape key to close settings
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (settingsOverlay.classList.contains('active')) closeSettings();
@@ -133,45 +133,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal Logic
     function openModal(event = null) {
         if (event) {
-            // Edit Mode
             modalTitle.textContent = 'Edit Event';
             submitBtn.textContent = 'Save Changes';
             eventUidInput.value = event.uid;
-            
-            // Show View Raw button
             viewRawBtn.style.display = 'block';
             viewRawBtn.onclick = () => {
                 rawEventContent.textContent = event.raw;
                 viewEventModal.classList.add('active');
             };
-            
             document.getElementById('summary').value = event.summary;
             document.getElementById('description').value = event.description || '';
             document.getElementById('location').value = event.location || '';
-            
-            // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
-            const formatDate = (dateStr) => {
-                // dateStr is now the structured object's dateTime string
-                // e.g. 2025-11-30T15:00:00 or 2025-11-30T15:00:00Z
-                // We want 2025-11-30T15:00 for the input
-                return dateStr.slice(0, 16);
-            };
-            
+            const formatDate = (dateStr) => dateStr.slice(0, 16);
             document.getElementById('startDate').value = formatDate(event.startDate.dateTime);
             if (event.endDate) {
                 document.getElementById('endDate').value = formatDate(event.endDate.dateTime);
             }
+            document.getElementById('rrule').value = event.recurrence || '';
+            deleteEventBtn.style.display = 'flex';
+            deleteEventBtn.onclick = () => {
+                openDeleteModal(event.uid);
+            };
         } else {
-            // Add Mode
             modalTitle.textContent = 'Add Event';
             submitBtn.textContent = 'Create Event';
             addEventForm.reset();
             eventUidInput.value = '';
-            
-            // Hide View Raw button
             viewRawBtn.style.display = 'none';
+            deleteEventBtn.style.display = 'none';
+            document.getElementById('rrule').value = '';
         }
-        
         addEventModal.classList.add('active');
         document.getElementById('summary').focus();
     }
@@ -190,409 +181,408 @@ document.addEventListener('DOMContentLoaded', () => {
     fabAddEvent.addEventListener('click', () => openModal(null));
     headerAddEventBtn.addEventListener('click', () => openModal(null));
     closeModalBtn.addEventListener('click', closeModal);
+    cancelEventBtn.addEventListener('click', closeModal);
     closeViewModalBtn.addEventListener('click', closeViewModal);
-    
-    // Close modal when clicking outside
-    addEventModal.addEventListener('click', (e) => {
-        if (e.target === addEventModal) {
-            closeModal();
-        }
-    });
+    addEventModal.addEventListener('click', (e) => { if (e.target === addEventModal) closeModal(); });
+    viewEventModal.addEventListener('click', (e) => { if (e.target === viewEventModal) closeViewModal(); });
 
-    viewEventModal.addEventListener('click', (e) => {
-        if (e.target === viewEventModal) {
-            closeViewModal();
-        }
-    });
-
-    // Escape key to close modal
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (addEventModal.classList.contains('active')) closeModal();
             if (viewEventModal.classList.contains('active')) closeViewModal();
+            if (importEventModal.classList.contains('active')) closeImportModal();
         }
     });
 
-    // Toast Notification
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        const icon = type === 'success' ? '✅' : '❌';
-        toast.innerHTML = `<span>${icon}</span> ${message}`;
-        
-        toastContainer.appendChild(toast);
-
-        // Remove after 3 seconds
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 3000);
+    // Import Modal Logic
+    function openImportModal() {
+        importEventModal.classList.add('active');
+        importContent.value = '';
+        importContent.focus();
     }
 
-    // Fetch and display events
-    async function fetchEvents() {
-        const query = searchInput.value;
-        const startDate = startDateFilter.value;
-        const endDate = endDateFilter.value;
+    function closeImportModal() {
+        importEventModal.classList.remove('active');
+        importContent.value = '';
+    }
 
-        let url = '/api/events';
-        const params = new URLSearchParams();
-        
-        if (query) params.append('q', query);
-        if (startDate) params.append('start', startDate);
-        if (endDate) params.append('end', endDate);
+    importEventBtn.addEventListener('click', openImportModal);
+    closeImportModalBtn.addEventListener('click', closeImportModal);
+    cancelImportBtn.addEventListener('click', closeImportModal);
+    importEventModal.addEventListener('click', (e) => { if (e.target === importEventModal) closeImportModal(); });
 
-        if (params.toString()) {
-            url += `/search?${params.toString()}`;
+    // Delete Modal Logic
+    function openDeleteModal(uid) {
+        eventToDeleteId = uid;
+        deleteConfirmModal.classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        deleteConfirmModal.classList.remove('active');
+        eventToDeleteId = null;
+    }
+
+    closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    deleteConfirmModal.addEventListener('click', (e) => { if (e.target === deleteConfirmModal) closeDeleteModal(); });
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (eventToDeleteId) {
+            await deleteEvent(eventToDeleteId);
+            closeDeleteModal();
+            if (addEventModal.classList.contains('active')) {
+                closeModal();
+            }
+        }
+    });
+
+    processImportBtn.addEventListener('click', async () => {
+        const icalData = importContent.value.trim();
+        if (!icalData) {
+            showConsoleMessage('Please paste iCal content', 'error');
+            return;
         }
 
         try {
+            const jcalData = ICAL.parse(icalData);
+            const comp = new ICAL.Component(jcalData);
+            const vevents = comp.getAllSubcomponents('vevent');
+
+            if (vevents.length === 0) {
+                showConsoleMessage('No events found in iCal data', 'error');
+                return;
+            }
+
+            let successCount = 0;
+            for (const vevent of vevents) {
+                const event = new ICAL.Event(vevent);
+                
+                const summary = event.summary;
+                const description = event.description;
+                const location = event.location;
+                const startDate = event.startDate ? event.startDate.toJSDate().toISOString() : null;
+                const endDate = event.endDate ? event.endDate.toJSDate().toISOString() : null;
+
+                if (!summary || !startDate) {
+                    console.warn('Skipping invalid event:', event);
+                    continue;
+                }
+
+                const eventData = {
+                    summary,
+                    description,
+                    location,
+                    startDate,
+                    endDate
+                };
+
+                // Send to API
+                try {
+                    const response = await fetch('/api/events', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(eventData)
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        console.error('Failed to save event:', await response.text());
+                    }
+                } catch (err) {
+                    console.error('Error saving imported event:', err);
+                }
+            }
+
+            if (successCount > 0) {
+                showConsoleMessage(`Successfully imported ${successCount} events`, 'success');
+                closeImportModal();
+                fetchEvents();
+            } else {
+                showConsoleMessage('Failed to import any events', 'error');
+            }
+
+        } catch (error) {
+            console.error('Error parsing iCal data:', error);
+            showConsoleMessage('Invalid iCal data', 'error', error.message);
+        }
+    });
+
+    // Console-style Error/Info Overlay
+    const consoleOverlay = document.getElementById('consoleOverlay');
+    const consoleOutput = document.getElementById('consoleOutput');
+    const closeConsoleBtn = document.getElementById('closeConsoleBtn');
+    const dismissConsoleBtn = document.getElementById('dismissConsoleBtn');
+
+    function showConsoleMessage(message, type = 'info', details = null) {
+        // Silent success - only log to browser console
+        if (type === 'success') {
+            console.log(`✓ SUCCESS: ${message}`);
+            return;
+        }
+
+        // Show overlay for errors and info
+        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        const typeLabel = type === 'error' ? 'ERROR' : 'INFO';
+        const icon = type === 'error' ? '✖' : 'ℹ';
+
+        let output = `[${timestamp}] ${icon} ${typeLabel}: ${message}`;
+
+        if (details) {
+            output += '\n\nDetails:\n' + (typeof details === 'object' ? JSON.stringify(details, null, 2) : details);
+        }
+
+        consoleOutput.textContent = output;
+        consoleOverlay.classList.add('active');
+        consoleOverlay.setAttribute('data-type', type);
+    }
+
+    function closeConsole() {
+        consoleOverlay.classList.remove('active');
+    }
+
+    closeConsoleBtn.addEventListener('click', closeConsole);
+    dismissConsoleBtn.addEventListener('click', closeConsole);
+    consoleOverlay.addEventListener('click', (e) => {
+        if (e.target === consoleOverlay) closeConsole();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && consoleOverlay.classList.contains('active')) {
+            closeConsole();
+        }
+    });
+
+    // Fetch and display events
+    async function fetchEvents(reset = true) {
+        if (reset) {
+            currentPage = 1;
+            allEvents = [];
+        }
+
+        const query = searchInput.value;
+        const startDate = startDateFilter.value;
+        const endDate = endDateFilter.value;
+        let url = '/api/events';
+        const params = new URLSearchParams();
+        
+        params.append('page', currentPage);
+        params.append('limit', limit);
+
+        if (query) params.append('q', query);
+        if (startDate) params.append('start', startDate);
+        if (endDate) params.append('end', endDate);
+        
+        // If searching, use search endpoint
+        if (query || startDate || endDate) {
+            url += '/search';
+        }
+        
+        url += `?${params.toString()}`;
+
+        try {
+            isLoading = true;
             const response = await fetch(url);
-            allEvents = await response.json();
+            const data = await response.json();
+            const newEvents = data.events || [];
+            const total = data.total || 0;
+            totalDatabaseCount = data.totalDatabaseCount || 0;
             
+            if (reset) {
+                allEvents = newEvents;
+            } else {
+                allEvents = [...allEvents, ...newEvents];
+            }
+
             if (currentView === 'list') {
                 renderEvents(allEvents);
+                updateEventCounts(allEvents.length, total);
+                
+                // Setup infinite scroll if we have more events
+                if (allEvents.length < total) {
+                    setupInfiniteScroll();
+                } else if (observer) {
+                    observer.disconnect();
+                }
             } else {
                 renderCalendar();
             }
         } catch (error) {
             console.error('Error fetching events:', error);
-            showToast('Failed to load events', 'error');
+            showConsoleMessage('Failed to load events', 'error', error.message);
+        } finally {
+            isLoading = false;
         }
+    }
+
+    function updateEventCounts(current, total) {
+        const countsEl = document.getElementById('eventCounts');
+        if (countsEl) {
+            countsEl.innerHTML = `<p style="margin: 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">Showing <strong>${current}</strong> of <strong>${total}</strong> events</p>`;
+        }
+    }
+
+    function setupInfiniteScroll() {
+        if (observer) observer.disconnect();
+
+        const sentinel = document.createElement('div');
+        sentinel.id = 'scrollSentinel';
+        sentinel.style.height = '20px';
+        sentinel.style.margin = '1rem 0';
+        eventList.appendChild(sentinel);
+
+        observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading) {
+                currentPage++;
+                fetchEvents(false);
+            }
+        }, { rootMargin: '100px' });
+
+        observer.observe(sentinel);
     }
 
     // Render events to DOM (List View)
     function renderEvents(events) {
         eventList.innerHTML = '';
         if (events.length === 0) {
-            eventList.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📅</div>
-                    <h3>No Events Found</h3>
-                    <p>Your calendar is looking a bit empty. Why not add some events?</p>
-                    <button class="btn-primary" onclick="document.getElementById('headerAddEventBtn').click()">Create Event</button>
-                </div>
-            `;
+            if (totalDatabaseCount > 0) {
+                // Empty search results
+                eventList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="ph ph-magnifying-glass"></i></div>
+                        <h3>No Items Found</h3>
+                        <p>Database contains <strong>${totalDatabaseCount}</strong> entries.</p>
+                        <button class="btn-secondary" onclick="document.getElementById('clearSearchBtn').click()">Clear Search</button>
+                    </div>
+                `;
+            } else {
+                // Empty database
+                eventList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="ph ph-calendar-x"></i></div>
+                        <h3>No Events Found</h3>
+                        <p>Your calendar is looking a bit empty. Why not add some events?</p>
+                        <button class="btn-primary" onclick="document.getElementById('headerAddEventBtn').click()">Create Event</button>
+                    </div>
+                `;
+            }
             return;
         }
 
         events.forEach(event => {
             const card = document.createElement('div');
             card.className = 'event-card';
-            
-            // Helper to parse structured date
             const parseDate = (dateObj) => {
                 if (!dateObj) return null;
-                // dateObj is { dateTime: string, timezone: string }
-                // If floating, treat as local. If UTC, treat as UTC.
-                // Actually, new Date(isoString) treats no-Z as local and Z as UTC, which is exactly what we want for display!
                 return new Date(dateObj.dateTime);
             };
-
             const startDateObj = parseDate(event.startDate);
             const endDateObj = parseDate(event.endDate);
-
             const startDate = startDateObj.toLocaleString(undefined, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
                 hour12: timeFormat === '12h'
             });
-            
             const endDate = endDateObj ? endDateObj.toLocaleString(undefined, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
                 hour12: timeFormat === '12h'
             }) : '';
-            
-            const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
+            const dateStr = event.isAllDay 
+                ? `${startDateObj.toLocaleDateString(undefined, { dateStyle: 'medium' })} <span class="badge badge-info">All Day</span>`
+                : (endDate ? `${startDate} - ${endDate}` : startDate);
 
             card.innerHTML = `
                 <div class="event-info">
                     <h3>${escapeHtml(event.summary)}</h3>
                     <div class="event-meta">
-                        <span>${event.isRecurring ? '🔄' : '🗓️'} ${dateStr}</span>
-                        ${event.location ? `<span>📍 ${escapeHtml(event.location)}</span>` : ''}
+                        <span>${event.isRecurring ? '<i class="ph ph-arrows-clockwise"></i>' : '<i class="ph ph-calendar-blank"></i>'} ${dateStr}</span>
+                        ${event.location ? `<span><i class="ph ph-map-pin"></i> ${escapeHtml(event.location)}</span>` : ''}
+                        ${event.recurrence ? `<span><i class="ph ph-repeat"></i> ${escapeHtml(event.recurrence)}</span>` : ''}
                     </div>
                     ${event.description ? `<p class="event-desc">${escapeHtml(event.description)}</p>` : ''}
                 </div>
                 <div class="event-actions">
-                    <button class="btn-view" aria-label="View raw event">👁️</button>
-                    <button class="btn-edit" aria-label="Edit event">Edit</button>
-                    <button class="btn-delete" data-uid="${event.uid}" aria-label="Delete event">Delete</button>
+                    <button class="btn-view" aria-label="View raw event"><i class="ph ph-code"></i></button>
+                    <button class="btn-edit" aria-label="Edit event"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="btn-delete" data-uid="${event.uid}" aria-label="Delete event"><i class="ph ph-trash"></i></button>
                 </div>
             `;
-            
-            // Add edit listener
             const editBtn = card.querySelector('.btn-edit');
             editBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openModal(event);
             });
-
-            // Add view listener
             const viewBtn = card.querySelector('.btn-view');
             viewBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 rawEventContent.textContent = event.raw;
                 viewEventModal.classList.add('active');
             });
-
-            // Add card click listener for details/edit
             card.addEventListener('click', () => openModal(event));
-            
             eventList.appendChild(card);
         });
 
-        // Add delete listeners
         document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation(); // Prevent card click
-                const uid = e.target.dataset.uid;
-                if (confirm('Are you sure you want to delete this event?')) {
-                    await deleteEvent(uid);
-                }
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Fix: Use currentTarget to get the button element, not the icon
+                const uid = e.currentTarget.dataset.uid;
+                openDeleteModal(uid);
             });
         });
     }
 
-    // Render Calendar View
+    // Render Calendar View (jcalendar.js)
     function renderCalendar() {
-        if (currentView === 'month') {
-            renderMonthView();
-        } else if (currentView === 'week') {
-            renderWeekView();
-        } else if (currentView === 'day') {
-            renderDayView();
-        }
-    }
+        const calendarEl = document.getElementById('calendar');
+        // Clear previous calendar instance if any (by clearing DOM)
+        // Note: jcalendar.js might attach event listeners to window/document, 
+        // but without a destroy method, clearing DOM is the best we can do to reset the view.
+        calendarEl.innerHTML = ''; 
 
-    function renderMonthView() {
-        monthViewContainer.style.display = 'block';
-        timeGridContainer.style.display = 'none';
-        
-        const year = currentCalendarDate.getFullYear();
-        const month = currentCalendarDate.getMonth();
-        
-        const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
-        currentDateLabel.textContent = `${monthName} ${year}`;
-        
-        calendarGrid.innerHTML = '';
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDayOfWeek = firstDay.getDay();
-        
-        for (let i = 0; i < startDayOfWeek; i++) {
-            const emptyCell = document.createElement('div');
-            emptyCell.className = 'calendar-day empty';
-            calendarGrid.appendChild(emptyCell);
-        }
-        
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-            const date = new Date(year, month, day);
-            const cell = document.createElement('div');
-            cell.className = 'calendar-day';
-            
-            if (isToday(date)) {
-                cell.classList.add('today');
+        const options = {
+            manualEditingEnabled: false,
+            theme: 'glass',
+            primaryColor: '#4f46e5',
+            headerBackgroundColor: '#4f46e5',
+            weekdayType: 'long-upper',
+            monthDisplayType: 'long',
+            events: {
+                onEventClick: (event) => {
+                    // event is the internal event object. We hope it preserves our 'id' property.
+                    const originalEvent = allEvents.find(e => e.uid === event.id);
+                    if (originalEvent) {
+                        openModal(originalEvent);
+                    }
+                }
             }
-            
-            const dayNum = document.createElement('div');
-            dayNum.className = 'day-number';
-            dayNum.textContent = day;
-            cell.appendChild(dayNum);
-            
-            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate.dateTime), date));
-            
-            dayEvents.forEach(event => {
-                const eventEl = createEventElement(event);
-                cell.appendChild(eventEl);
-            });
-            
-            cell.addEventListener('click', () => {
-                openModal(null);
-                document.getElementById('startDate').value = toLocalISOString(date);
-            });
-            
-            calendarGrid.appendChild(cell);
-        }
-    }
+        };
 
-    function renderWeekView() {
-        monthViewContainer.style.display = 'none';
-        timeGridContainer.style.display = 'block';
+        // Initialize calendar
+        calendarInstance = new calendarJs('calendar', options);
         
-        // Calculate start of week (Sunday)
-        const startOfWeek = new Date(currentCalendarDate);
-        startOfWeek.setDate(currentCalendarDate.getDate() - currentCalendarDate.getDay());
-        
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        
-        const startMonth = startOfWeek.toLocaleString('default', { month: 'short' });
-        const endMonth = endOfWeek.toLocaleString('default', { month: 'short' });
-        const year = startOfWeek.getFullYear();
-        
-        currentDateLabel.textContent = `${startMonth} ${startOfWeek.getDate()} - ${endMonth} ${endOfWeek.getDate()}, ${year}`;
-        
-        renderTimeGrid(startOfWeek, 7);
-    }
-
-    function renderDayView() {
-        monthViewContainer.style.display = 'none';
-        timeGridContainer.style.display = 'block';
-        
-        const dateOptions = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
-        currentDateLabel.textContent = currentCalendarDate.toLocaleDateString(undefined, dateOptions);
-        
-        renderTimeGrid(currentCalendarDate, 1);
-    }
-
-    function renderTimeGrid(startDate, days) {
-        // Render Header
-        timeGridHeader.innerHTML = '';
-        timeGridContent.innerHTML = '';
-        
-        // Render Time Column (Labels)
-        timeColumn.innerHTML = '';
-        for (let i = 0; i < 24; i++) {
-            const timeLabel = document.createElement('div');
-            timeLabel.className = 'time-label';
+        // Add events
+        allEvents.forEach(event => {
+            const start = new Date(event.startDate.dateTime);
+            const end = event.endDate ? new Date(event.endDate.dateTime) : new Date(start.getTime() + 60 * 60 * 1000);
             
-            let timeText;
-            if (timeFormat === '12h') {
-                const ampm = i >= 12 ? 'PM' : 'AM';
-                const hour12 = i % 12 || 12;
-                timeText = `${hour12} ${ampm}`;
-            } else {
-                timeText = i.toString().padStart(2, '0') + ':00';
-            }
+            const calendarEvent = {
+                id: event.uid,
+                title: event.summary,
+                from: start,
+                to: end,
+                location: event.location,
+                description: event.description,
+                color: event.isRecurring ? '#db2777' : '#4f46e5'
+            };
             
-            timeLabel.textContent = timeText;
-            timeColumn.appendChild(timeLabel);
-        }
-        
-        // Render Days
-        for (let i = 0; i < days; i++) {
-            const date = new Date(startDate);
-            date.setDate(startDate.getDate() + i);
-            
-            // Header Cell
-            const headerCell = document.createElement('div');
-            headerCell.className = 'time-grid-header-cell';
-            if (isToday(date)) headerCell.classList.add('today');
-            
-            const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
-            const dayNum = date.getDate();
-            headerCell.textContent = `${dayName} ${dayNum}`;
-            timeGridHeader.appendChild(headerCell);
-            
-            // Body Column
-            const dayColumn = document.createElement('div');
-            dayColumn.className = 'day-column';
-            
-            // Time Slots (Grid Lines)
-            for (let h = 0; h < 24; h++) {
-                const slot = document.createElement('div');
-                slot.className = 'time-slot';
-                dayColumn.appendChild(slot);
-            }
-            
-            // Current Time Indicator (if today)
-            if (isToday(date)) {
-                const now = new Date();
-                const minutes = now.getHours() * 60 + now.getMinutes();
-                const top = (minutes / 1440) * 100; // Percentage
-                
-                const indicator = document.createElement('div');
-                indicator.className = 'current-time-indicator';
-                indicator.style.top = `${top}%`;
-                dayColumn.appendChild(indicator);
-            }
-            
-            // Events
-            const dayEvents = allEvents.filter(event => isSameDay(new Date(event.startDate.dateTime), date));
-            dayEvents.forEach(event => {
-                const eventStart = new Date(event.startDate.dateTime);
-                const eventEnd = event.endDate ? new Date(event.endDate.dateTime) : new Date(eventStart.getTime() + 60 * 60 * 1000); // Default 1h
-                
-                const startMinutes = eventStart.getHours() * 60 + eventStart.getMinutes();
-                const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes();
-                const duration = endMinutes - startMinutes;
-                
-                const top = (startMinutes / 1440) * 100;
-                const height = (duration / 1440) * 100;
-                
-                const eventEl = document.createElement('div');
-                eventEl.className = `time-grid-event ${event.isRecurring ? 'recurring' : ''}`;
-                eventEl.style.top = `${top}%`;
-                eventEl.style.height = `${height}%`;
-                eventEl.textContent = event.summary;
-                eventEl.title = `${event.summary} (${eventStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: timeFormat === '12h'})})`;
-                
-                eventEl.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openModal(event);
-                });
-                
-                dayColumn.appendChild(eventEl);
-            });
-            
-            // Click to add event
-            dayColumn.addEventListener('click', (e) => {
-                if (e.target !== dayColumn && !e.target.classList.contains('time-slot')) return;
-                
-                openModal(null);
-                document.getElementById('startDate').value = toLocalISOString(date);
-            });
-            
-            timeGridContent.appendChild(dayColumn);
-        }
-    }
-
-    // Helper Functions
-    function isToday(date) {
-        const today = new Date();
-        return isSameDay(date, today);
-    }
-
-    function isSameDay(d1, d2) {
-        return d1.getDate() === d2.getDate() &&
-               d1.getMonth() === d2.getMonth() &&
-               d1.getFullYear() === d2.getFullYear();
-    }
-
-    function createEventElement(event) {
-        const eventEl = document.createElement('div');
-        eventEl.className = `calendar-event ${event.isRecurring ? 'recurring' : ''}`;
-        eventEl.textContent = event.summary;
-        eventEl.title = `${event.summary}`;
-        
-        eventEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openModal(event);
+            calendarInstance.addEvent(calendarEvent);
         });
-        
-        return eventEl;
-    }
-    
-    function toLocalISOString(date) {
-        return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
-            .toISOString()
-            .slice(0, 16);
     }
 
     // View Toggle Logic
     listViewBtn.addEventListener('click', () => {
-        console.log('List view clicked. Current view:', currentView);
-        if (currentView === 'list') {
-            console.log('Already in list view, ignoring.');
-            return;
-        }
+        if (currentView === 'list') return;
         currentView = 'list';
         localStorage.setItem('currentView', 'list');
         listViewBtn.classList.add('active');
@@ -601,86 +591,17 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarViewSection.style.display = 'none';
         updateSearchVisibility();
         renderEvents(allEvents);
-        console.log('Switched to list view');
     });
 
     calendarViewBtn.addEventListener('click', () => {
-        console.log('Calendar toggle clicked. Current view:', currentView);
-        if (currentView !== 'list') {
-            console.log('Already in calendar view (or sub-view), ignoring.');
-            return;
-        }
-        currentView = 'month'; // Default to month view
+        if (currentView !== 'list') return;
+        currentView = 'month'; // jcalendar handles views internally mostly, but we treat it as one view
         localStorage.setItem('currentView', 'month');
         calendarViewBtn.classList.add('active');
         listViewBtn.classList.remove('active');
         calendarViewSection.style.display = 'block';
         listViewSection.style.display = 'none';
-        
-        // Update sub-view buttons
-        updateViewButtons('month');
         updateSearchVisibility();
-        renderCalendar();
-        console.log('Switched to calendar view (month)');
-    });
-
-    // Sub-View Switcher
-    function updateViewButtons(view) {
-        console.log('Updating view buttons for:', view);
-        monthViewBtn.classList.toggle('active', view === 'month');
-        weekViewBtn.classList.toggle('active', view === 'week');
-        dayViewBtn.classList.toggle('active', view === 'day');
-    }
-
-    monthViewBtn.addEventListener('click', () => {
-        console.log('Month view clicked');
-        currentView = 'month';
-        localStorage.setItem('currentView', 'month');
-        updateViewButtons('month');
-        renderCalendar();
-    });
-
-    weekViewBtn.addEventListener('click', () => {
-        console.log('Week view clicked');
-        currentView = 'week';
-        localStorage.setItem('currentView', 'week');
-        updateViewButtons('week');
-        renderCalendar();
-    });
-
-    dayViewBtn.addEventListener('click', () => {
-        console.log('Day view clicked');
-        currentView = 'day';
-        localStorage.setItem('currentView', 'day');
-        updateViewButtons('day');
-        renderCalendar();
-    });
-
-    // Navigation
-    prevBtn.addEventListener('click', () => {
-        if (currentView === 'month') {
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-        } else if (currentView === 'week') {
-            currentCalendarDate.setDate(currentCalendarDate.getDate() - 7);
-        } else if (currentView === 'day') {
-            currentCalendarDate.setDate(currentCalendarDate.getDate() - 1);
-        }
-        renderCalendar();
-    });
-
-    nextBtn.addEventListener('click', () => {
-        if (currentView === 'month') {
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-        } else if (currentView === 'week') {
-            currentCalendarDate.setDate(currentCalendarDate.getDate() + 7);
-        } else if (currentView === 'day') {
-            currentCalendarDate.setDate(currentCalendarDate.getDate() + 1);
-        }
-        renderCalendar();
-    });
-
-    todayBtn.addEventListener('click', () => {
-        currentCalendarDate = new Date();
         renderCalendar();
     });
 
@@ -689,32 +610,24 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const formData = new FormData(addEventForm);
         const uid = formData.get('uid');
-        
         const eventData = {
             summary: formData.get('summary'),
             description: formData.get('description'),
             location: formData.get('location'),
-            // Send ISO strings. If user wants floating (no timezone support yet in UI), we send no Z.
-            // But wait, the backend expects just the string now for ICAL.Time.fromString.
-            // For now, let's assume local time input from datetime-local is what we want to send.
-            // datetime-local gives 'YYYY-MM-DDTHH:mm'. 
-            // If we append Z, it becomes UTC. If we don't, it's floating.
-            // Let's stick to floating for now as per user request/issue.
-            startDate: formData.get('startDate'), // Send as is (floating)
-            endDate: formData.get('endDate') || null // Send as is (floating)
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate') || null,
+            rrule: formData.get('rrule') || null
         };
 
         try {
             let response;
             if (uid) {
-                // Update existing event
                 response = await fetch(`/api/events/${uid}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(eventData)
                 });
             } else {
-                // Create new event
                 response = await fetch('/api/events', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -724,36 +637,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 closeModal();
-                showToast(uid ? 'Event updated successfully' : 'Event added successfully');
-                fetchEvents(); // Reload events
+                showConsoleMessage(uid ? 'Event updated successfully' : 'Event added successfully', 'success');
+                fetchEvents();
             } else {
-                showToast(uid ? 'Failed to update event' : 'Failed to add event', 'error');
+                const errorData = await response.json();
+                const errorMessage = errorData.error || (uid ? 'Failed to update event' : 'Failed to add event');
+                showConsoleMessage(errorMessage, 'error', errorData);
+                console.error('Server error:', errorMessage);
             }
         } catch (error) {
             console.error('Error saving event:', error);
-            showToast('Error saving event', 'error');
+            showConsoleMessage('Error saving event', 'error', error.message);
         }
     });
 
     // Delete event
     async function deleteEvent(uid) {
         try {
-            const response = await fetch(`/api/events/${uid}`, {
-                method: 'DELETE'
-            });
-
+            const response = await fetch(`/api/events/${uid}`, { method: 'DELETE' });
             if (response.ok) {
-                showToast('Event deleted successfully');
-                // Animate removal
+                showConsoleMessage('Event deleted successfully', 'success');
                 if (currentView === 'list') {
                     const btn = document.querySelector(`.btn-delete[data-uid="${uid}"]`);
                     if (btn) {
                         const card = btn.closest('.event-card');
                         card.style.opacity = '0';
                         card.style.transform = 'translateX(20px)';
-                        setTimeout(() => {
-                            fetchEvents();
-                        }, 300);
+                        setTimeout(() => fetchEvents(), 300);
                     } else {
                         fetchEvents();
                     }
@@ -761,34 +671,52 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchEvents();
                 }
             } else {
-                showToast('Failed to delete event', 'error');
+                const errorData = await response.json();
+                showConsoleMessage('Failed to delete event', 'error', errorData);
             }
         } catch (error) {
             console.error('Error deleting event:', error);
-            showToast('Error deleting event', 'error');
+            showConsoleMessage('Error deleting event', 'error', error.message);
         }
     }
 
     // Search functionality
     let debounceTimer;
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
     const handleSearch = () => {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            fetchEvents();
-        }, 300);
+        debounceTimer = setTimeout(() => fetchEvents(), 300);
+        
+        // Toggle clear button visibility
+        if (searchInput.value.length > 0) {
+            clearSearchBtn.style.display = 'flex';
+        } else {
+            clearSearchBtn.style.display = 'none';
+        }
     };
-
     searchInput.addEventListener('input', handleSearch);
+    
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchBtn.style.display = 'none';
+        fetchEvents();
+        searchInput.focus();
+    });
     startDateFilter.addEventListener('change', handleSearch);
     endDateFilter.addEventListener('change', handleSearch);
 
-    // Search Visibility Logic
     function updateSearchVisibility() {
         if (currentView === 'list') {
             searchContainer.style.display = 'flex';
         } else {
             searchContainer.style.display = 'none';
         }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     // Initial load
@@ -798,23 +726,11 @@ document.addEventListener('DOMContentLoaded', () => {
         listViewSection.style.display = 'block';
         calendarViewSection.style.display = 'none';
     } else {
-        // month, week, or day
         listViewBtn.classList.remove('active');
         calendarViewBtn.classList.add('active');
         listViewSection.style.display = 'none';
         calendarViewSection.style.display = 'block';
-        updateViewButtons(currentView);
     }
     updateSearchVisibility();
     fetchEvents();
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
 });

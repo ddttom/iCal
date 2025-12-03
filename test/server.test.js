@@ -3,12 +3,13 @@ const fs = require('fs');
 const path = require('path');
 
 // Mock the calendar file path before requiring the server
-const testCalendarPath = path.join(__dirname, 'temp', 'test-server-calendar.ics');
+const testDbPath = path.join(__dirname, 'temp', 'test-server.db');
 process.env.TEST_MODE = 'true';
 
 describe('Server API Endpoints', () => {
     let app;
     const testDir = path.join(__dirname, 'temp');
+    let calendarManager;
 
     beforeAll(() => {
         if (!fs.existsSync(testDir)) {
@@ -16,10 +17,10 @@ describe('Server API Endpoints', () => {
         }
     });
 
-    beforeEach(() => {
-        // Clean up and create fresh calendar file
-        if (fs.existsSync(testCalendarPath)) {
-            fs.unlinkSync(testCalendarPath);
+    beforeEach(async () => {
+        // Clean up and create fresh DB
+        if (fs.existsSync(testDbPath)) {
+            fs.unlinkSync(testDbPath);
         }
 
         // Create a mock Express app for testing
@@ -30,83 +31,72 @@ describe('Server API Endpoints', () => {
         app = express();
         app.use(bodyParser.json());
 
-        const calendarManager = new CalendarManager(testCalendarPath);
+        calendarManager = new CalendarManager(testDbPath);
+        await calendarManager.init();
 
         // Initialize with a test event
-        calendarManager.addEvent({
+        await calendarManager.addEvent({
             summary: 'Test Event',
             description: 'Test description',
             location: 'Test location',
-            startDate: new Date('2025-01-01T10:00:00Z'),
-            endDate: new Date('2025-01-01T11:00:00Z')
+            startDate: '2025-01-01T10:00:00Z',
+            endDate: '2025-01-01T11:00:00Z'
         });
-        calendarManager.save();
-        calendarManager.load();
 
         // Define API routes
-        app.get('/api/events', (req, res) => {
-            calendarManager.load();
-            const events = calendarManager.listEvents();
+        app.get('/api/events', async (req, res) => {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 50;
+            const offset = (page - 1) * limit;
+            const events = await calendarManager.listEvents(limit, offset);
             res.json(events);
         });
 
-        app.get('/api/events/search', (req, res) => {
+        app.get('/api/events/search', async (req, res) => {
             const query = req.query.q || '';
             const startDate = req.query.start;
             const endDate = req.query.end;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 50;
+            const offset = (page - 1) * limit;
 
             if (!query && !startDate && !endDate) {
                 return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
             }
 
-            calendarManager.load();
-            const events = calendarManager.searchEvents(query, startDate, endDate);
+            const events = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
             res.json(events);
         });
 
-        app.post('/api/events', (req, res) => {
+        app.post('/api/events', async (req, res) => {
             const eventData = req.body;
             if (!eventData.summary) {
                 return res.status(400).json({ error: 'Summary is required' });
             }
 
-            if (eventData.startDate) eventData.startDate = new Date(eventData.startDate);
-            if (eventData.endDate) eventData.endDate = new Date(eventData.endDate);
-
-            const uid = calendarManager.addEvent(eventData);
-            if (calendarManager.save()) {
+            try {
+                const uid = await calendarManager.addEvent(eventData);
                 res.status(201).json({ uid, message: 'Event added successfully' });
-            } else {
+            } catch (err) {
                 res.status(500).json({ error: 'Failed to save event' });
             }
         });
 
-        app.put('/api/events/:uid', (req, res) => {
+        app.put('/api/events/:uid', async (req, res) => {
             const uid = req.params.uid;
             const updates = req.body;
             
-            if (updates.startDate) updates.startDate = new Date(updates.startDate);
-            if (updates.endDate) updates.endDate = new Date(updates.endDate);
-
-            if (calendarManager.updateEvent(uid, updates)) {
-                if (calendarManager.save()) {
-                    res.json({ message: 'Event updated successfully' });
-                } else {
-                    res.status(500).json({ error: 'Failed to save changes' });
-                }
+            if (await calendarManager.updateEvent(uid, updates)) {
+                res.json({ message: 'Event updated successfully' });
             } else {
                 res.status(404).json({ error: 'Event not found' });
             }
         });
 
-        app.delete('/api/events/:uid', (req, res) => {
+        app.delete('/api/events/:uid', async (req, res) => {
             const uid = req.params.uid;
-            if (calendarManager.deleteEvent(uid)) {
-                if (calendarManager.save()) {
-                    res.json({ message: 'Event deleted successfully' });
-                } else {
-                    res.status(500).json({ error: 'Failed to save changes' });
-                }
+            if (await calendarManager.deleteEvent(uid)) {
+                res.json({ message: 'Event deleted successfully' });
             } else {
                 res.status(404).json({ error: 'Event not found' });
             }
@@ -126,8 +116,9 @@ describe('Server API Endpoints', () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(Array.isArray(response.body)).toBe(true);
-            expect(response.body.length).toBeGreaterThan(0);
+            expect(response.body).toHaveProperty('events');
+            expect(Array.isArray(response.body.events)).toBe(true);
+            expect(response.body.events.length).toBeGreaterThan(0);
         });
 
         it('should return events with correct structure', async () => {
@@ -135,7 +126,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const event = response.body[0];
+            const event = response.body.events[0];
             expect(event).toHaveProperty('uid');
             expect(event).toHaveProperty('summary');
             expect(event).toHaveProperty('startDate');
@@ -148,7 +139,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const event = response.body[0];
+            const event = response.body.events[0];
             expect(event.summary).toBe('Test Event');
             expect(event.description).toBe('Test description');
             expect(event.location).toBe('Test location');
@@ -162,8 +153,9 @@ describe('Server API Endpoints', () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(Array.isArray(response.body)).toBe(true);
-            expect(response.body.length).toBeGreaterThan(0);
+            expect(response.body).toHaveProperty('events');
+            expect(Array.isArray(response.body.events)).toBe(true);
+            expect(response.body.events.length).toBeGreaterThan(0);
         });
 
         it('should return 400 when query parameter is missing', async () => {
@@ -181,8 +173,8 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?q=Test Event')
                 .expect(200);
 
-            expect(response.body.length).toBeGreaterThan(0);
-            expect(response.body[0].summary).toContain('Test Event');
+            expect(response.body.events.length).toBeGreaterThan(0);
+            expect(response.body.events[0].summary).toContain('Test Event');
         });
 
         it('should find events by description', async () => {
@@ -190,7 +182,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?q=description')
                 .expect(200);
 
-            expect(response.body.length).toBeGreaterThan(0);
+            expect(response.body.events.length).toBeGreaterThan(0);
         });
 
         it('should find events by location', async () => {
@@ -198,7 +190,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?q=location')
                 .expect(200);
 
-            expect(response.body.length).toBeGreaterThan(0);
+            expect(response.body.events.length).toBeGreaterThan(0);
         });
 
         it('should return empty array for no matches', async () => {
@@ -206,7 +198,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?q=NonExistent')
                 .expect(200);
 
-            expect(response.body).toEqual([]);
+            expect(response.body.events).toEqual([]);
         });
 
         it('should be case-insensitive', async () => {
@@ -214,7 +206,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?q=TEST')
                 .expect(200);
 
-            expect(response.body.length).toBeGreaterThan(0);
+            expect(response.body.events.length).toBeGreaterThan(0);
         });
 
         it('should filter by date range', async () => {
@@ -231,7 +223,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?start=2025-04-01&end=2025-04-02')
                 .expect(200);
 
-            const found = response.body.find(e => e.summary === 'Range Test');
+            const found = response.body.events.find(e => e.summary === 'Range Test');
             expect(found).toBeDefined();
         });
     });
@@ -306,7 +298,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const savedEvent = getResponse.body.find(e => e.uid === response.body.uid);
+            const savedEvent = getResponse.body.events.find(e => e.uid === response.body.uid);
             expect(savedEvent).toBeDefined();
             expect(savedEvent.summary).toBe('Date Test Event');
         });
@@ -315,7 +307,7 @@ describe('Server API Endpoints', () => {
             const initialResponse = await request(app)
                 .get('/api/events')
                 .expect(200);
-            const initialCount = initialResponse.body.length;
+            const initialCount = initialResponse.body.events.length;
 
             await request(app)
                 .post('/api/events')
@@ -329,7 +321,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            expect(finalResponse.body.length).toBe(initialCount + 1);
+            expect(finalResponse.body.events.length).toBe(initialCount + 1);
         });
     });
 
@@ -364,7 +356,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const updatedEvent = response.body.find(e => e.uid === eventUid);
+            const updatedEvent = response.body.events.find(e => e.uid === eventUid);
             expect(updatedEvent.summary).toBe('Updated Event');
             expect(updatedEvent.description).toBe('Updated description');
         });
@@ -423,7 +415,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const deletedEvent = getResponse.body.find(e => e.uid === eventUid);
+            const deletedEvent = getResponse.body.events.find(e => e.uid === eventUid);
             expect(deletedEvent).toBeUndefined();
         });
 
@@ -431,7 +423,7 @@ describe('Server API Endpoints', () => {
             const initialResponse = await request(app)
                 .get('/api/events')
                 .expect(200);
-            const initialCount = initialResponse.body.length;
+            const initialCount = initialResponse.body.events.length;
 
             await request(app)
                 .delete(`/api/events/${eventUid}`)
@@ -441,7 +433,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            expect(finalResponse.body.length).toBe(initialCount - 1);
+            expect(finalResponse.body.events.length).toBe(initialCount - 1);
         });
     });
 
@@ -467,7 +459,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const createdEvent = listResponse.body.find(e => e.uid === uid);
+            const createdEvent = listResponse.body.events.find(e => e.uid === uid);
             expect(createdEvent).toBeDefined();
             expect(createdEvent.summary).toBe('API Workflow Test');
 
@@ -476,8 +468,8 @@ describe('Server API Endpoints', () => {
                 .get('/api/events/search?q=Workflow')
                 .expect(200);
 
-            expect(searchResponse.body.length).toBeGreaterThan(0);
-            expect(searchResponse.body.some(e => e.uid === uid)).toBe(true);
+            expect(searchResponse.body.events.length).toBeGreaterThan(0);
+            expect(searchResponse.body.events.some(e => e.uid === uid)).toBe(true);
 
             // Delete
             await request(app)
@@ -489,7 +481,7 @@ describe('Server API Endpoints', () => {
                 .get('/api/events')
                 .expect(200);
 
-            const deletedEvent = finalListResponse.body.find(e => e.uid === uid);
+            const deletedEvent = finalListResponse.body.events.find(e => e.uid === uid);
             expect(deletedEvent).toBeUndefined();
         });
     });

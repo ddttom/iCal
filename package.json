@@ -40,10 +40,11 @@
   "dependencies": {
     "body-parser": "^2.2.1",
     "commander": "^14.0.2",
-    "date-fns": "^4.1.0",
     "express": "^5.1.0",
     "ical.js": "^2.2.1",
     "inquirer": "^13.0.1",
+    "jcalendar.js": "^2.12.6",
+    "sqlite3": "^5.1.7",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

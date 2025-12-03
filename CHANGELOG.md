@@ -5,6 +5,133 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2025-12-03
+
+### Fixed
+
+- **Safari Compatibility**: Added `-webkit-backdrop-filter` vendor prefixes for Safari support to all glassmorphism UI elements:
+  - Modal overlay backdrop blur effect
+  - Empty state background blur effect
+  - Settings panel backdrop blur effect
+
+### Documentation
+
+- **README.md**: Updated with information about browser compatibility improvements
+- **architecture.md**: Added CSS vendor prefix information to the frontend section
+
+## [2.2.0] - 2025-12-03
+
+### Changed
+
+- **Notification System**: Replaced toast notifications with a console-style error overlay system.
+  - Success messages are now silent and only logged to the browser console (e.g., "Event added successfully").
+  - Error messages display in a prominent console overlay with:
+    - Timestamp in 24-hour format
+    - Error type indicator (ERROR/INFO)
+    - Detailed error information (JSON formatted for objects)
+    - App-controlled dismiss button (no auto-hide)
+  - Console overlay features:
+    - Dark terminal theme (#1e1e1e background)
+    - Monospace font for readability
+    - Colour-coded messages (red for errors, blue for info)
+    - Escape key support for quick dismissal
+    - Click outside to close
+
+### Removed
+
+- **Toast Notifications**: Removed auto-dismissing toast notification system for a cleaner, less intrusive UX.
+
+## [2.1.1] - 2025-12-03
+
+### Fixed
+
+- **Event Creation**: Fixed "Invalid Date Time" error when creating events via the web interface. The `ensureSeconds` helper function now properly converts `datetime-local` format (`YYYY-MM-DDTHH:mm`) to ISO 8601 format with seconds (`YYYY-MM-DDTHH:mm:ss`) as required by `ical.js`.
+- **Date Storage**: Database now correctly stores parsed `ICAL.Time` objects as ISO strings instead of raw input, ensuring consistent date formatting throughout the application.
+
+### Changed
+
+- **Date Parsing**: Enhanced date parsing logic in `CalendarManager.addEvent()` with better error handling and validation.
+- **Logging**: Added detailed console logging for date conversion debugging.
+
+### Documentation
+
+- **CLAUDE.md**: Added comprehensive documentation about date format conversion and the `ensureSeconds` helper function.
+- **Common Pitfalls**: Updated to include date formatting requirements and database storage best practices.
+
+## [2.1.0] - 2025-12-03
+
+### Added
+
+- **Infinite Scroll**: Replaced "Load More" button with automatic infinite scrolling for a seamless browsing experience.
+- **Event Counts**: Added a display showing the number of events currently loaded vs. the total number of events in the database.
+- **Pagination Metadata**: API now returns total event counts and pagination metadata.
+- **Empty State**: Improved empty state UI to distinguish between an empty database and empty search results, showing the total database count when no items are found.
+
+## [2.0.1] - 2025-12-03
+
+### Fixed
+
+- **Git Configuration**: Removed `calendar.db` from git tracking and added it to `.gitignore` to prevent repository bloat and push errors.
+- **Delete Confirmation**: Fixed an issue where the delete confirmation popup would disappear immediately by replacing the native `confirm()` dialog with a custom, styled modal.
+
+### Documentation
+
+- **Architecture**: Updated `docs/architecture.md` to reflect the correct project structure.
+- **README**: Added instructions for database setup and `agents.md` symlinking.
+
+## [2.0.0] - 2025-12-03
+
+### Added
+
+- **SQLite Database**: Migrated data storage from flat `.ics` files to a SQLite database for improved performance and scalability.
+- **Pagination**: Implemented pagination for API endpoints and Frontend to efficiently handle large datasets (100MB+).
+- **Export Functionality**: Added ability to export the calendar database back to an `.ics` file via CLI and Web GUI.
+- **CLI Import**: New `load` command in CLI to bulk import events from `.ics` files into the database.
+
+### Changed
+
+- **Architecture**: Refactored `CalendarManager` to interact with `lib/database.js` instead of direct file manipulation.
+- **Performance**: Significant performance improvements for loading and searching events, especially with large files.
+- **Dependencies**: Added `sqlite3` dependency. Removed `date-fns`.
+
+## [1.7.0] - 2025-12-02
+
+### Added
+
+- **UI Overhaul**: Complete redesign of the header and action buttons for a professional look.
+- **Fixed Header**: Header is now fixed at the top with a glassmorphism effect.
+- **Phosphor Icons**: Replaced all emojis with high-quality Phosphor Icons.
+- **Style Guide**: Added `docs/style-guide.md` to document the design system.
+- **Toolbar**: Dedicated toolbar for search and filters to prevent layout overlaps.
+
+## [1.6.0] - 2025-12-02
+
+### Added
+
+- **iCal Import**: New feature allowing users to import events by pasting iCal (.ics) text content directly into the application.
+- **Frontend Parsing**: Integrated `ical.js` from npm to handle iCal parsing on the client side.
+
+### Changed
+
+- **Dependency Management**: Updated `server.js` to serve `ical.js` directly from `node_modules`, ensuring consistent versioning.
+
+## [1.5.0] - 2025-12-01
+
+### Added
+
+- **Interactive Calendar Library**: Integrated `jcalendar.js` to replace the manual calendar implementation, providing a more robust and feature-rich calendar view.
+- **Settings Panel**: Added a settings panel to toggle themes (Light/Dark) and time formats (12h/24h).
+- **Edit Event Actions**: Added "Cancel" and "Delete" buttons to the Edit Event modal for better user control.
+
+### Changed
+
+- **Calendar UI**: Completely overhauled the calendar view using `jcalendar.js`.
+- **Script Loading**: Optimized script loading order in `index.html` to ensure dependencies are loaded correctly.
+
+### Fixed
+
+- **Event Loading**: Resolved issues with event loading and rendering by fixing API usage and script dependencies.
+
 ## [1.4.1] - 2025-12-01
 
 ### Added

@@ -9,99 +9,140 @@ const port = 3000;
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
+app.use('/lib/ical.js', express.static(path.join(__dirname, 'node_modules/ical.js/dist/ical.min.js')));
 
-// Default calendar file for the GUI
-const defaultCalendarPath = path.resolve('calendar.ics');
-const calendarManager = new CalendarManager(defaultCalendarPath);
+// Initialize Calendar Manager with Database
+const calendarManager = new CalendarManager();
 
-// Ensure calendar exists
-if (!fileExists(defaultCalendarPath)) {
-    calendarManager.addEvent({ summary: 'Welcome Event', startDate: new Date() });
-    calendarManager.save();
-} else {
-    calendarManager.load();
-}
+// Initialize DB and start server
+(async () => {
+    try {
+        await calendarManager.init();
+        
+        // Check if we need to seed initial data
+        // For now, let's assume if DB is empty we might want to import default calendar.ics if exists
+        // But let's leave that to manual import or CLI for now to avoid auto-importing 110MB file on restart
+        
+        app.listen(port, () => {
+            console.log(`Server running at http://localhost:${port}`);
+        });
+    } catch (err) {
+        console.error('Failed to initialize database:', err);
+        process.exit(1);
+    }
+})();
 
 // API Endpoints
 
-// Get all events
-app.get('/api/events', (req, res) => {
-    calendarManager.load(); // Reload to get latest changes
-    const events = calendarManager.listEvents();
-    res.json(events);
+// Get all events (paginated)
+app.get('/api/events', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = (page - 1) * limit;
+
+        const { events, total } = await calendarManager.listEvents(limit, offset);
+        res.json({
+            events,
+            total,
+            totalDatabaseCount: total, // For consistency with search endpoint
+            page,
+            limit
+        });
+    } catch (err) {
+        console.error('Error in GET /api/events:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Search events
-app.get('/api/events/search', (req, res) => {
-    const query = req.query.q || ''; // Allow empty query if dates are provided
-    const startDate = req.query.start;
-    const endDate = req.query.end;
+app.get('/api/events/search', async (req, res) => {
+    try {
+        const query = req.query.q || '';
+        const startDate = req.query.start;
+        const endDate = req.query.end;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = (page - 1) * limit;
 
-    if (!query && !startDate && !endDate) {
-        return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
+        if (!query && !startDate && !endDate) {
+            return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
+        }
+
+        const { events, total, totalDatabaseCount } = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
+        res.json({
+            events,
+            total,
+            totalDatabaseCount,
+            page,
+            limit
+        });
+    } catch (err) {
+        console.error('Error in GET /api/events/search:', err);
+        res.status(500).json({ error: err.message });
     }
-
-    calendarManager.load();
-    const events = calendarManager.searchEvents(query, startDate, endDate);
-    res.json(events);
 });
 
 // Add event
-app.post('/api/events', (req, res) => {
-    const eventData = req.body;
-    if (!eventData.summary) {
-        return res.status(400).json({ error: 'Summary is required' });
-    }
-    
-    // Ensure dates are Date objects
-    if (eventData.startDate) eventData.startDate = new Date(eventData.startDate);
-    if (eventData.endDate) eventData.endDate = new Date(eventData.endDate);
-
-    // Advanced properties are passed directly in eventData:
-    // organizer, attendees, status, categories, alarm
-
-    const uid = calendarManager.addEvent(eventData);
-    if (calendarManager.save()) {
+app.post('/api/events', async (req, res) => {
+    console.log('Received POST /api/events request', req.body);
+    try {
+        const eventData = req.body;
+        if (!eventData.summary) {
+            return res.status(400).json({ error: 'Summary is required' });
+        }
+        
+        const uid = await calendarManager.addEvent(eventData);
         res.status(201).json({ uid, message: 'Event added successfully' });
-    } else {
-        res.status(500).json({ error: 'Failed to save event' });
+    } catch (err) {
+        console.error('Error in POST /api/events:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
 // Update event
-app.put('/api/events/:uid', (req, res) => {
-    const uid = req.params.uid;
-    const updates = req.body;
-    
-    // Ensure dates are Date objects if present
-    if (updates.startDate) updates.startDate = new Date(updates.startDate);
-    if (updates.endDate) updates.endDate = new Date(updates.endDate);
-
-    if (calendarManager.updateEvent(uid, updates)) {
-        if (calendarManager.save()) {
+app.put('/api/events/:uid', async (req, res) => {
+    try {
+        const uid = req.params.uid;
+        const updates = req.body;
+        
+        const success = await calendarManager.updateEvent(uid, updates);
+        if (success) {
             res.json({ message: 'Event updated successfully' });
         } else {
-            res.status(500).json({ error: 'Failed to save changes' });
+            res.status(404).json({ error: 'Event not found' });
         }
-    } else {
-        res.status(404).json({ error: 'Event not found' });
+    } catch (err) {
+        console.error('Error in PUT /api/events/:uid:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
 // Delete event
-app.delete('/api/events/:uid', (req, res) => {
-    const uid = req.params.uid;
-    if (calendarManager.deleteEvent(uid)) {
-        if (calendarManager.save()) {
+app.delete('/api/events/:uid', async (req, res) => {
+    try {
+        const uid = req.params.uid;
+        const success = await calendarManager.deleteEvent(uid);
+        if (success) {
             res.json({ message: 'Event deleted successfully' });
         } else {
-            res.status(500).json({ error: 'Failed to save changes' });
+            res.status(404).json({ error: 'Event not found' });
         }
-    } else {
-        res.status(404).json({ error: 'Event not found' });
+    } catch (err) {
+        console.error('Error in DELETE /api/events/:uid:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+// Export Calendar
+app.get('/api/export', async (req, res) => {
+    try {
+        const icsData = await calendarManager.exportToICS();
+        res.setHeader('Content-Type', 'text/calendar');
+        res.setHeader('Content-Disposition', 'attachment; filename=calendar.ics');
+        res.send(icsData);
+    } catch (err) {
+        console.error('Error in GET /api/export:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
