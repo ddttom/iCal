@@ -41,8 +41,13 @@ app.get('/api/events', async (req, res) => {
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
 
-        const events = await calendarManager.listEvents(limit, offset);
-        res.json(events);
+        const { events, total } = await calendarManager.listEvents(limit, offset);
+        res.json({
+            events,
+            total,
+            page,
+            limit
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -62,8 +67,13 @@ app.get('/api/events/search', async (req, res) => {
             return res.status(400).json({ error: 'At least one filter parameter (q, start, end) is required' });
         }
 
-        const events = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
-        res.json(events);
+        const { events, total } = await calendarManager.searchEvents(query, startDate, endDate, limit, offset);
+        res.json({
+            events,
+            total,
+            page,
+            limit
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

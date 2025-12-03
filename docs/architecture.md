@@ -85,7 +85,7 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
 - **`index.html`:** Defines the structure, including the list view, calendar view container, and modals.
 - **`app.js`:** Handles:
   - Fetching data from the API (supports pagination).
-  - Rendering the Event List and "Load More" functionality.
+  - Rendering the Event List and **Infinite Scroll** functionality (using `IntersectionObserver`).
   - Rendering the Calendar View (using `jcalendar.js`).
   - Managing UI state (Modals, Tabs, Theme, Time Format).
   - Form submissions (Add/Edit/Import).
@@ -106,8 +106,8 @@ The frontend is a Single Page Application (SPA) built with Vanilla JavaScript.
 2. `app.js` requests `/api/events?page=1&limit=100`.
 3. `server.js` calls `CalendarManager.listEvents()`.
 4. `CalendarManager` queries the `Database`.
-5. `Database` executes `SELECT * FROM events LIMIT 100 OFFSET 0`.
-6. Results are returned as JSON to the frontend.
+5. `Database` executes `SELECT * FROM events LIMIT 100 OFFSET 0` and `SELECT COUNT(*)`.
+6. Results are returned as JSON `{ events, total, page, limit }` to the frontend.
 
 ## Dependencies
 

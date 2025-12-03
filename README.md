@@ -23,7 +23,8 @@ A Node.js application to manage iCal (.ics) files via CLI and a Web GUI.
   - **Standardized Time**: All times are displayed in 24-hour format. Supports both absolute (UTC) and floating (local) times for accurate scheduling.
   - **Visual Indicators**: Icons to easily distinguish between recurring and single events.
   - **Import/Export**: Easily import existing iCal (.ics) data into the database and export it back.
-  - **Scalability**: Powered by SQLite to handle large datasets (100MB+) with pagination support.
+  - **Scalability**: Powered by SQLite to handle large datasets (100MB+) with **Pagination** and **Infinite Scroll** support.
+  - **Event Counts**: Real-time display of total events and currently showing count.
   - **Modern UI**: A professional, responsive interface featuring a fixed glassmorphism header and Phosphor Icons.
 
 ## UI & Design

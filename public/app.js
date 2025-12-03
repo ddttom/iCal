@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let calendarInstance = null;
     let currentPage = 1;
     const limit = 100; // Load 100 events at a time
+    let isLoading = false;
+    let observer = null;
 
 
     // Theme Logic
@@ -319,8 +321,11 @@ document.addEventListener('DOMContentLoaded', () => {
         url += `?${params.toString()}`;
 
         try {
+            isLoading = true;
             const response = await fetch(url);
-            const newEvents = await response.json();
+            const data = await response.json();
+            const newEvents = data.events || [];
+            const total = data.total || 0;
             
             if (reset) {
                 allEvents = newEvents;
@@ -330,9 +335,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (currentView === 'list') {
                 renderEvents(allEvents);
-                // Add "Load More" button if we got full limit
-                if (newEvents.length === limit) {
-                    addLoadMoreButton();
+                updateEventCounts(allEvents.length, total);
+                
+                // Setup infinite scroll if we have more events
+                if (allEvents.length < total) {
+                    setupInfiniteScroll();
+                } else if (observer) {
+                    observer.disconnect();
                 }
             } else {
                 renderCalendar();
@@ -340,21 +349,35 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching events:', error);
             showToast('Failed to load events', 'error');
+        } finally {
+            isLoading = false;
         }
     }
 
-    function addLoadMoreButton() {
-        const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = 'btn-secondary';
-        loadMoreBtn.style.margin = '1rem auto';
-        loadMoreBtn.style.display = 'block';
-        loadMoreBtn.textContent = 'Load More';
-        loadMoreBtn.onclick = () => {
-            currentPage++;
-            fetchEvents(false);
-            loadMoreBtn.remove();
-        };
-        eventList.appendChild(loadMoreBtn);
+    function updateEventCounts(current, total) {
+        const countsEl = document.getElementById('eventCounts');
+        if (countsEl) {
+            countsEl.innerHTML = `<p style="margin: 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">Showing <strong>${current}</strong> of <strong>${total}</strong> events</p>`;
+        }
+    }
+
+    function setupInfiniteScroll() {
+        if (observer) observer.disconnect();
+
+        const sentinel = document.createElement('div');
+        sentinel.id = 'scrollSentinel';
+        sentinel.style.height = '20px';
+        sentinel.style.margin = '1rem 0';
+        eventList.appendChild(sentinel);
+
+        observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading) {
+                currentPage++;
+                fetchEvents(false);
+            }
+        }, { rootMargin: '100px' });
+
+        observer.observe(sentinel);
     }
 
     // Render events to DOM (List View)
