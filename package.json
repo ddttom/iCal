@@ -40,7 +40,7 @@
   "dependencies": {
     "body-parser": "^2.2.1",
     "commander": "^14.0.2",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "ical.js": "^2.2.1",
     "inquirer": "^13.0.1",
     "jcalendar.js": "^2.12.6",
